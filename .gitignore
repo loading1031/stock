@@ -1,0 +1,18 @@
+# OS / IDE
+.DS_Store
+.idea/
+.zed/*.local.json
+
+# Build
+build/
+.gradle/
+out/
+
+# Mutation test history
+.pitest/
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
