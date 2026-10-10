@@ -288,7 +288,7 @@ com.<base>
 
 | 마일스톤 | 내용 | 완료 기준 |
 |---|---|---|
-| M0 | Claude 설정(컨벤션 복사, `CLAUDE.md`, 거래 규칙, 훅), Gradle, Docker Compose, Flyway, 컨텍스트 로딩 테스트, ArchUnit, 뮤테이션 테스트(PIT, 변경분 실행) | `./gradlew test` 통과, 훅 동작, `pitestChanged`가 샘플 도메인 클래스에서 동작 |
+| M0 | Claude 설정(`/kopring:init`, 거래 규칙, 훅), Gradle, Docker Compose, Flyway, 컨텍스트 로딩 테스트, ArchUnit, 뮤테이션 테스트(PIT, 변경분 실행) | `./gradlew test` 통과, 훅 동작, `pitestChanged`가 샘플 도메인 클래스에서 동작 |
 | M1 | 인증(JWT + Refresh), 계좌 연결(암호화 저장), KIS 토큰 발급 | 프론트에서 로그인 후 모의 계좌 잔고 조회 |
 | M2 | 종목 마스터, 시장·세션 캘린더, KRX Open API 일봉 백필, 분봉 수집, 실시간 시세 중계, 해외 일봉·지수 선물·KOSPI200 야간선물 수집 | 차트에 캔들 표시, 실시간 가격 갱신, 아침 07:00에 간밤 해외·야간선물 지표가 채워짐 |
 | M3 | 수동 주문, 상태 머신, 체결 수신, 포트폴리오·원장, Outbox | 모의 계좌에서 매수 → 체결 → 잔고 반영 |

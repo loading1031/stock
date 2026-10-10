@@ -1,6 +1,12 @@
 # 기획 결정 이력
 
-최신이 위. 형식은 `.claude/rules/planning.md`.
+최신이 위. 형식은 planning 플러그인의 `rules` 스킬.
+
+## 2026-10-10 decide | 진행 방식과 컨벤션을 플러그인으로
+- 결정: 프로젝트마다 복사하던 것을 플러그인으로 묶는다. 마켓플레이스 `~/Documents/claude-plugins`(`loading1031-plugins`)에 `planning`(기획 진행)과 `kopring`(Kotlin + Spring 컨벤션)
+- 결정: 프로젝트 고유 값(기획 폴더, 시각화 문서, 용어, 동기화 표)은 CLAUDE.md "기획 설정"에 둔다
+- 바뀐 문서: CLAUDE.md, plan.md M0, backlog.md B-01. `.claude/commands/*`, `.claude/rules/planning.md` 삭제
+- 남은 것: 마켓플레이스 GitHub 업로드, kopring-conventions 저장소와의 원본 관계 정리
 
 ## 2026-10-10 decide | 기획 진행 방식
 - 결정: 백로그에서 주제 고르기(`/backlog`) → 조사·논의 → 문서 반영(`/spec`) → 커밋(`/commit`). 세션 하나에 백로그 항목 1~2개
