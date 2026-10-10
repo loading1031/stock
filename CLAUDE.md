@@ -11,6 +11,7 @@
 | `docs/planning/plan.md` | 전체 기획: 기능, 아키텍처, 데이터 모델, 마일스톤(M0~M7), 확인 필요 항목 |
 | `docs/planning/strategy.md` | 운영 전략: 워크플로(Mermaid), jev 배치, 위험 예산, 포지션 계획, 매도, 교체 매매, 평가 |
 | `docs/planning/backlog.md` | 다음에 기획할 후보 목록 |
+| `docs/planning/work-orders.md` | **작업지시서**: 다음 세션이 이전 대화 없이 시작하도록 항목별로 적은 것. 세션 시작 시 여기부터 |
 | `docs/planning/log.md` | 기획 결정 이력 |
 | 시각화 문서 (Claude Docs) | https://claude.ai/code/artifact/a712f001-c5c0-4731-8015-d1bed440fac6 — 다이어그램 모음 |
 
@@ -56,6 +57,7 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 /planning:commit               docs: 커밋 (기획 브랜치에)
    ↓
 /planning:done                 백로그 완료 처리 → main에 --no-ff 합치기 → 브랜치 삭제 (확인 후)
+/planning:handoff              세션을 마치기 전, 다음 세션용 작업지시서 갱신
 ```
 
 - 설정·도구 변경(`chore:`)은 main에 바로 커밋해도 된다. 기획(`docs:`)은 기획 브랜치에서 한다.

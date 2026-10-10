@@ -2,6 +2,10 @@
 
 최신이 위. 형식은 planning 플러그인의 `rules` 스킬.
 
+## 2026-10-10 decide | 작업지시서
+- 결정: 세션이 바뀌어도 이어지도록 항목별 작업지시서(work-orders.md)를 둔다. pick이 먼저 읽고, done이 지우고, 세션 끝에 /planning:handoff로 갱신
+- 바뀐 문서: work-orders.md 신설(B-01, B-03, B-02, B-13, B-14, 동기화), CLAUDE.md, planning 플러그인 0.3.0
+
 ## 2026-10-10 decide | 백로그 항목별 브랜치
 - 결정: 백로그 항목 하나 = 기획 브랜치 하나(`plan/<ID>-<slug>`). pick에서 만들고, spec·commit은 그 브랜치에서, `/planning:done`에서 main으로 `--no-ff` 합친 뒤 삭제. 설정·도구(`chore:`)는 main에 바로
 - 바뀐 문서: CLAUDE.md 기획 설정·진행 방식, backlog.md "진행 중" 표, planning 플러그인 0.2.0
