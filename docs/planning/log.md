@@ -2,6 +2,11 @@
 
 최신이 위. 형식은 planning 플러그인의 `rules` 스킬.
 
+## 2026-10-10 decide | 백로그 항목별 브랜치
+- 결정: 백로그 항목 하나 = 기획 브랜치 하나(`plan/<ID>-<slug>`). pick에서 만들고, spec·commit은 그 브랜치에서, `/planning:done`에서 main으로 `--no-ff` 합친 뒤 삭제. 설정·도구(`chore:`)는 main에 바로
+- 바뀐 문서: CLAUDE.md 기획 설정·진행 방식, backlog.md "진행 중" 표, planning 플러그인 0.2.0
+- 남은 것: 코드 브랜치 규칙은 B-01에서
+
 ## 2026-10-10 decide | 진행 방식과 컨벤션을 플러그인으로
 - 결정: 프로젝트마다 복사하던 것을 플러그인으로 묶는다. 마켓플레이스 `~/Documents/claude-plugins`(`loading1031-plugins`)에 `planning`(기획 진행)과 `kopring`(Kotlin + Spring 컨벤션)
 - 결정: 프로젝트 고유 값(기획 폴더, 시각화 문서, 용어, 동기화 표)은 CLAUDE.md "기획 설정"에 둔다

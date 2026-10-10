@@ -17,12 +17,15 @@
 기획 문서 규칙은 `planning` 플러그인의 `rules` 스킬과 아래 "기획 설정"을 따른다.
 
 ## 기획 설정
-planning 플러그인(/planning:backlog → /planning:spec → /planning:commit)이 읽는다.
+planning 플러그인(/planning:backlog → /planning:spec → /planning:commit → /planning:done)이 읽는다.
 
 - 기획 폴더: docs/planning
 - 기준 문서: plan.md
 - 시각화 문서: https://claude.ai/code/artifact/a712f001-c5c0-4731-8015-d1bed440fac6 (Claude Docs 도구로 고치고, 다이어그램은 스크린샷으로 렌더링 확인)
 - 용어: 아래 "용어" 절. "단계"라는 말은 쓰지 않는다
+- 기본 브랜치: main
+- 기획 브랜치: plan/<ID>-<slug> (예: plan/B-03-frontend)
+- 코드 브랜치: M0 이후에 정한다 (B-01)
 
 ### 동기화 표
 | 바뀐 것 | 함께 고칠 곳 |
@@ -41,17 +44,21 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit)
 
 ## 기획 진행 방식
 
-한 번에 하나씩 끝까지 닫는다. 세션 하나에서 백로그 항목 1~2개만 다룬다.
+한 번에 하나씩 끝까지 닫는다. **백로그 항목 하나 = 브랜치 하나**, 세션 하나에서 항목 1~2개만 다룬다.
 
 ```
-/planning:backlog        백로그에서 다음 주제를 고른다 (또는 새 후보를 추린다)
+/planning:backlog              다음 주제 추천 (진행 중인 브랜치가 있으면 그것부터)
+/planning:backlog pick <ID>    main에서 plan/<ID>-<slug> 브랜치를 만들고 논의 시작
    ↓
-조사·논의                 사실은 출처를 열어 확인. 확인 못 한 것은 "검증하지 않음" 또는 확인 필요 항목으로
+조사·논의                       사실은 출처를 열어 확인. 확인 못 한 것은 "검증하지 않음" 또는 확인 필요 항목으로
    ↓
-/planning:spec <주제>    결정된 내용을 기획 문서에 반영 + 관련 문서 동기화 + log 기록 + 백로그 갱신
+/planning:spec <주제>          결정을 문서에 반영 + 동기화 + log 기록 (기획 브랜치에서만)
+/planning:commit               docs: 커밋 (기획 브랜치에)
    ↓
-/planning:commit         docs: 커밋
+/planning:done                 백로그 완료 처리 → main에 --no-ff 합치기 → 브랜치 삭제 (확인 후)
 ```
+
+- 설정·도구 변경(`chore:`)은 main에 바로 커밋해도 된다. 기획(`docs:`)은 기획 브랜치에서 한다.
 
 - 논의 중 새 주제가 나오면 바로 파고들지 말고 **백로그에 추가**한다. 지금 주제를 먼저 닫는다.
 - 대화가 길어지면 멈추고, 결정된 것만 `/planning:spec`으로 반영한 뒤 나머지는 백로그에 남긴다.
