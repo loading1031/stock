@@ -1,6 +1,6 @@
 # 작업지시서
 
-- 작성일: 2026-10-10
+- 작성일: 2026-10-10, 갱신 2026-10-13
 - 쓰임: 다음 세션이 이전 대화 없이 시작할 수 있도록, 백로그 항목마다 목표·읽을 것·정할 것·산출물·완료 기준을 적어 둔다. `/planning:backlog pick <ID>`가 이 문서의 해당 절을 먼저 읽는다.
 - 항목이 끝나면(`/planning:done`) 해당 절을 지우고 log.md로 넘긴다. 중간에 멈추면 그 절의 "진행 메모"에 남긴다.
 
@@ -8,7 +8,8 @@
 
 **시작**
 1. Claude Code를 새로 시작했는지 확인. `/planning:`을 입력했을 때 `backlog`, `spec`, `commit`, `done`이 자동완성되면 플러그인이 잡힌 것이다. 안 되면 셸에서 `claude plugin list`로 `planning@loading1031-plugins`, `kopring@loading1031-plugins`가 enabled인지 확인
-2. `git status`가 깨끗하고 `main`인지 확인 (진행 중인 브랜치가 있으면 그 브랜치로)
+2. `git status`가 깨끗하고 `main`인지 확인 (진행 중인 브랜치가 있으면 그 브랜치로). worktree에서 `main`이 다른 폴더에 열려 있으면 `git switch -c plan/<ID>-<slug> main`으로 만든다
+   - kopring 플러그인이 0.2.0인지 확인(`claude plugin list`). 0.2.0부터 `time/inject-clock` 등 값 규칙 4개와 `JdbcClient` 어댑터 제한이 들어 있다
 3. `/planning:backlog pick <ID>` → 이 문서의 해당 절을 읽고 시작
 
 **종료**
@@ -19,51 +20,13 @@
 
 | 순서 | ID | 세션 | 사용자 준비물 |
 |---|---|---|---|
-| 1 | B-01 | M0 설계 | JDK 25 설치 여부 결정, Docker 동작 확인 |
+| 1 | B-18 | 기획 관리를 GitHub 이슈로 | 없음 |
 | 2 | B-03 | 프론트엔드 기술과 화면 | 없음 |
 | 3 | B-02 | KIS API 검증 | **KIS 모의투자 신청 + KIS Developers 모의 앱키 발급** |
-| 아무 때나 | B-13, B-14 | 플러그인 저장소 정리 (claude-plugins 저장소에서) | GitHub 저장소 이름·공개 범위 결정 |
-| 아무 때나 | 동기화 | 시각화 문서 동기화 빚 4건 해소 | 없음 |
+| 아무 때나 | B-14 | kopring 원본 정리 (claude-plugins 저장소에서) | A/B 선택 |
+| 아무 때나 | 동기화 | 시각화 문서 동기화 빚 6건 해소 | 없음 |
 
-B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03을 먼저 닫는다. 모의투자 신청은 미리 해 두면 좋다(신청 후 3개월 미접속 해지 주의).
-
----
-
-## B-01 M0 설계: Claude·빌드 기반
-
-- 브랜치: `plan/B-01-m0-foundation`
-- 목표: M0 구현 세션이 **이 설계 문서만 보고** 프로젝트 골격을 만들 수 있게 한다.
-- 산출물: `docs/planning/m0-foundation.md` (새 주제 템플릿), plan.md 2장·7장 M0 갱신, CLAUDE.md "코드 작업" 절 초안
-
-### 읽을 것
-- plan.md 2장(스택), 4장(아키텍처·패키지 구조), 5장(데이터 모델의 금액·시각 원칙), 7장 M0
-- strategy.md 1장(원칙)
-- kopring 플러그인: `guide` 스킬, `init` 스킬
-
-### 정할 것 (사용자에게 물을 질문)
-1. 기본 패키지 이름 (예: `com.<이름>.stock`)과 Gradle 구조 (단일 모듈 + 기능 우선 패키지 / 멀티 모듈)
-2. **거래 규칙**과 강제 방법. 후보: 금액·가격에 `Double`/`Float` 금지, `Instant.now()`·`LocalDateTime.now()` 금지(`Clock` 주입), `BigDecimal` 연산에 `RoundingMode` 명시, 계좌번호·키 로깅 금지
-   - 어디에 둘지: 프로젝트 전용 훅 / kopring 플러그인 규칙 추가 / 별도 `trading` 플러그인
-3. 시계열 예외를 검사기에 반영할지: kopring 검사기의 기술 클라이언트 목록에 `JdbcClient` 추가 (플러그인 변경)
-4. ArchUnit으로 강제할 의존 방향 범위 (헥사고날: `adapter.in → application.service → port.out ← adapter.out`)
-5. PIT 설정 확정: 대상 패키지, `pitestChanged` 태스크, Claude 규칙(살아남은 뮤턴트 처리 4분류)
-6. Docker Compose: TimescaleDB 이미지와 버전, Flyway 초기 마이그레이션 범위(M0에서는 빈 스키마? 인증 테이블까지?)
-7. **코드 브랜치 규칙** (예: `feat/M1-auth`)과 기획 브랜치와의 관계
-8. 컨텍스트 로딩 테스트와 샘플 도메인 클래스(PIT 동작 확인용)
-
-### 조사할 것 (출처를 열어 확인)
-- Spring Boot 4.1 최신 패치 버전, Kotlin 2.3+/2.4 최신, Gradle 최신 9.x, Kotlin JDSL 최신(Boot 4 지원 3.7+)
-- **Spring Boot 4가 쓰는 JUnit 버전과 `pitest-junit5-plugin` 호환** (가장 큰 위험)
-- TimescaleDB 공식 Docker 이미지 태그와 PostgreSQL 버전
-- Zed Kotlin 확장(Kotlin LSP)이 Kotlin 2.3+·JDK 25에서 동작하는지
-
-### 완료 기준
-- 위 1~8에 결정 또는 "제안 + 확인 필요"가 적혀 있다
-- M0 구현 체크리스트(만들 파일 목록, 실행할 명령, 확인 방법)가 문서에 있다
-- 새로 생긴 주제는 백로그 후보로 옮겼다
-
-### 진행 메모
-(없음)
+B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-18·B-03을 먼저 닫는다. 모의투자 신청은 미리 해 두면 좋다(신청 후 3개월 미접속 해지 주의).
 
 ---
 
@@ -107,7 +70,7 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 - 산출물: `docs/planning/kis-verification.md`(항목별 결과 표), plan.md 8장·strategy.md 19장 체크 갱신, 결과에 따라 바뀌는 절 수정
 
 ### 읽을 것
-- plan.md 3.2(계좌 수명), 3.3(시세), 3.4(주문·모의 제약), 3.11(해외·선물), 8장
+- plan.md 3.2(계좌 수명), 3.3(시세), 3.4(주문·모의 제약), 3.11(해외·선물), **4.6(주문·체결 정합성: 누적 상태 기록, 묶음, KIS 필드 표)**, 8장
 - strategy.md 15장(모의투자 제약), 19장
 
 ### 확인할 항목 (우선순위 순)
@@ -119,6 +82,15 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 6. NXT 시세·주문 구분 방법
 7. 환율·금리·VIX 제공 여부
 8. 뉴스·투자의견(목표가) API 제공 여부
+9. **주문·체결 기록에 필요한 것** (plan.md 4.6이 이 결과에 기대고 있다)
+   - 체결통보(`H0STCNI9`)의 실제 필드가 공식 예제와 같은지, 고유 체결 번호가 정말 없는지
+   - 같은 통보가 두 번 오는지(WebSocket 재연결 포함)
+   - 일별주문체결조회(`VTTC0081R`) `output1.tot_ccld_amt`가 주문의 총 체결 금액인지. 예제의 `output2` 설명은 한 칸씩 밀려 보인다
+   - 수수료·세금 확정 값을 어느 API에서 받는지(조회는 추정치)
+   - 정정 주문의 체결이 새 주문번호와 원주문번호 중 어느 것으로 오는지
+   - 시장가 매수의 주문 가능 금액 계산(묶을 금액의 기준), 매도 대금을 언제부터 주문에 쓸 수 있는지
+   - 매 요청 헤더에 App Secret을 보내야 하는지(B-10: 그렇다면 HTTP 클라이언트 헤더 로깅 금지)
+   - 모의 키로 해외주식 주문·시세가 되는지, 모의 계좌의 종목별 증거금률과 미수 허용 여부, 현금으로만 매수하는 주문 조건(plan.md 3.7 통합증거금·미수 금지)
 
 ### 정할 것
 - 검증 스크립트를 무엇으로 쓸지 (임시 스크립트 / Kotlin으로 M1 어댑터의 시작점으로 쓸지). 앱 코드와 분리된 `scripts/kis-probe/` 제안
@@ -127,27 +99,18 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 ### 지켜야 할 것
 - 모의 키만 쓴다. 실전 키를 쓰지 않는다
 - 키·계좌번호를 로그·문서·커밋에 남기지 않는다. `.env`는 `.gitignore`에 있다
+- 참고: KIS 공식 예제 저장소 [open-trading-api](https://github.com/koreainvestment/open-trading-api)의 `examples_llm/`에 TR ID와 필드 정의가 있다
 - 주문 검증은 정규장에, 소량으로
 
 ### 완료 기준
-- 1~8 각각 "확인됨 / 안 됨 / 확인 불가(이유)"와 근거(응답 요약 또는 공식 문서 링크)가 표에 있다
+- 1~9 각각 "확인됨 / 안 됨 / 확인 불가(이유)"와 근거(응답 요약 또는 공식 문서 링크)가 표에 있다
+- 9번 결과가 plan.md 4.6과 다르면 4.6을 고쳤다
 - 결과로 바뀐 설계가 해당 문서에 반영됐다
 
 ### 진행 메모
 (없음)
 
 ---
-
-## B-13 마켓플레이스 GitHub 업로드
-
-- 작업 위치: `~/Documents/claude-plugins` 저장소 (stock이 아님. 기획 브랜치 대신 그 저장소의 `chore:` 작업)
-- 선행 (사용자): 저장소 이름(제안: `claude-plugins`), 공개 범위(private 권장) 결정
-- 할 일
-  1. `gh repo create loading1031/<이름> --private --source ~/Documents/claude-plugins --push` (외부 업로드라 실행 전 확인)
-  2. 마켓플레이스를 GitHub 소스로 다시 등록: `claude plugin marketplace remove loading1031-plugins` → `claude plugin marketplace add loading1031/<이름>`
-  3. stock에서 `claude plugin list`로 두 플러그인이 다시 enabled인지 확인
-  4. stock `CLAUDE.md` "플러그인" 절의 마켓플레이스 위치 갱신, backlog B-13 완료
-- 완료 기준: 다른 디렉터리에서 GitHub 소스로 설치가 된다
 
 ## B-14 kopring 원본 정리
 
@@ -156,7 +119,7 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 - 선택지 (사용자 결정)
   - A. kopring-conventions 저장소 자체를 플러그인 구조로 바꾸고, 마켓플레이스는 `github` 소스로 그 저장소를 참조
   - B. 플러그인을 원본으로 삼고, kopring-conventions에는 문서와 예시(`examples/`)만 남기며 README에 플러그인 설치 안내
-- 선행: B-13
+- 선행: B-13 (2026-10-13 완료. 마켓플레이스는 GitHub `loading1031/claude-plugins`)
 - 완료 기준: 규칙 원본이 한 곳이고, 다른 곳은 그것을 가리킨다
 
 ## 동기화 세션 (선택)
