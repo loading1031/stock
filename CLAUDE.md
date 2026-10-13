@@ -19,17 +19,20 @@
 기획 문서 규칙은 `planning` 플러그인의 `rules` 스킬과 아래 "기획 설정"을 따른다.
 
 ## 기획 설정
-planning 플러그인(/planning:backlog → /planning:spec → /planning:commit → /planning:done)이 읽는다.
+planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋·브랜치·이슈 규칙)는 플러그인 스킬이 원본**이라 여기에 옮겨 적지 않는다.
+
+- 최소 버전: 0.6.0
 
 - 기획 폴더: docs/planning
 - 기준 문서: plan.md
 - 시각화 문서: https://claude.ai/code/artifact/a712f001-c5c0-4731-8015-d1bed440fac6 (Claude Docs 도구로 고치고, 다이어그램은 스크린샷으로 렌더링 확인)
-- 용어: 아래 "용어" 절. "단계"라는 말은 쓰지 않는다
+- 용어: 아래 "용어" 절
+- 금지어: 단계
 - 기본 브랜치: main
 - 기획 브랜치: plan/<ID>-<slug> (예: plan/B-03-frontend)
 - 합치기 방식: PR (머지 커밋, PR 본문의 `Closes #<이슈>`로 이슈를 닫음)
 - 작업지시서: issue (GitHub 이슈, 라벨 `plan`. 진행 메모는 댓글)
-- 코드 브랜치: M0 이후에 정한다 (B-01)
+- 코드 브랜치: `<종류>/M<번호>-<slug>`(예: `feat/M1-auth`), 작업에 이슈가 있으면 `<종류>/<이슈 번호>-<slug>`. 상세는 `docs/planning/m0-foundation.md`
 
 ### 동기화 표
 | 바뀐 것 | 함께 고칠 곳 |
@@ -48,35 +51,7 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 
 ## 기획 진행 방식
 
-한 번에 하나씩 끝까지 닫는다. **백로그 항목 하나 = 브랜치 하나**, 세션 하나에서 항목 1~2개만 다룬다.
-
-```
-/planning:backlog              다음 주제 추천 (진행 중인 브랜치가 있으면 그것부터)
-/planning:backlog pick <ID>    main에서 plan/<ID>-<slug> 브랜치를 만들고 논의 시작
-   ↓
-조사·논의                       사실은 출처를 열어 확인. 확인 못 한 것은 "검증하지 않음" 또는 확인 필요 항목으로
-   ↓
-/planning:spec <주제>          결정을 문서에 반영 + 동기화 + log 기록 (기획 브랜치에서만)
-/planning:commit               docs: 커밋 (기획 브랜치에)
-   ↓
-/planning:done                 백로그 완료 처리 → PR 만들고 머지 커밋으로 합치기 → 브랜치 삭제 (확인 후)
-/planning:handoff              세션을 마치기 전, 이슈에 진행 메모 댓글·다음 후보 지시서 이슈
-```
-
-**세션 시작**
-1. `/planning:`을 입력했을 때 `backlog`, `spec`, `commit`, `done`, `handoff`가 자동완성되는지 확인. 안 되면 셸에서 `claude plugin list`로 `planning@loading1031-plugins`(0.5.0 이상), `kopring@loading1031-plugins`가 enabled인지 확인
-2. `git status`가 깨끗하고 `main`인지 확인(진행 중인 브랜치가 있으면 그 브랜치로)
-3. `/planning:backlog` → backlog.md "권장 순서"에서 고르고 `/planning:backlog pick <ID>` (이슈를 읽고 시작)
-
-**세션 종료**
-1. 결정된 것은 `/planning:spec` → `/planning:commit`
-2. 항목이 끝났으면 `/planning:done`. 안 끝났으면 브랜치를 두고 `/planning:handoff`로 이슈에 진행 메모 댓글
-
-- 설정·도구 변경(`chore:`)은 main에 바로 커밋해도 된다. 기획(`docs:`)은 기획 브랜치에서 한다.
-
-- 논의 중 새 주제가 나오면 바로 파고들지 말고 **백로그에 추가**한다. 지금 주제를 먼저 닫는다.
-- 대화가 길어지면 멈추고, 결정된 것만 `/planning:spec`으로 반영한 뒤 나머지는 백로그에 남긴다.
-- 사용자가 결정하지 않은 것은 문서에 "결정"으로 쓰지 않는다. 제안은 제안으로 적는다.
+`/planning:backlog`로 시작한다(backlog.md "권장 순서" → `pick <ID>`가 이슈를 읽는다). 절차와 규칙은 planning 스킬에 있다. `/planning:`이 자동완성되지 않거나 스킬이 최소 버전보다 낮다고 하면, 셸에서 `claude plugin marketplace update loading1031-plugins && claude plugin update planning@loading1031-plugins` 후 재시작한다.
 
 ## 결정된 사항
 
@@ -101,7 +76,7 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 
 | 플러그인 | 쓰임 |
 |---|---|
-| `planning` | 기획 진행 (`/planning:backlog`, `/planning:spec`, `/planning:commit`) |
+| `planning` | 기획 진행 (`/planning:backlog` → `spec` → `commit` → `done`, `handoff`). git 명령 검사 훅(add -A, 커밋 접두어·Refs, 금지어) |
 | `kopring` | Kotlin + Spring 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 |
 
 플러그인 자체를 고칠 때는 마켓플레이스 저장소에서 고친다. 이 저장소에 규칙·명령을 복사하지 않는다. 고친 뒤 GitHub에 push하고 `claude plugin marketplace update loading1031-plugins`를 실행해야 반영된다(로컬 폴더를 고치는 것만으로는 적용되지 않는다).
@@ -120,9 +95,6 @@ M0에서 `/kopring:init hexagonal`로 컨벤션 선언과 pre-commit 훅을 설�
 
 ## Git
 
-- 커밋은 `/planning:commit` 규칙을 따른다. 기획(`docs:`)과 코드 커밋을 섞지 않는다.
 - 원격: GitHub [loading1031/stock](https://github.com/loading1031/stock)(public). `.env`와 키·계좌번호는 절대 올리지 않는다.
-- 커밋 본문 끝에 `Refs: #<이슈 번호>`를 넣는다. 번호는 backlog.md의 이슈 칸. 이슈가 아직 없는 항목이면 `Refs: <백로그 ID>`. 이슈는 PR 본문의 `Closes #<번호>`로 닫는다.
-- 코드 브랜치: `<종류>/M<번호>-<slug>`(예: `feat/M1-auth`), 작업에 이슈가 있으면 `<종류>/<이슈 번호>-<slug>`. 코드 브랜치에서는 `docs/planning/`을 고치지 않는다. 상세는 `docs/planning/m0-foundation.md`.
-- 기획·코드 브랜치 모두 PR로 합친다(머지 커밋). git worktree에서 `main`이 다른 폴더에 열려 있으면 새 브랜치는 `origin/main`에서 만들고, 합친 뒤 `main`이 열린 폴더에서 `git pull --ff-only`로 맞춘다.
+- 커밋·브랜치·PR 규칙은 planning 스킬(`/planning:commit`, `/planning:done`)을 따른다.
 - 문서는 한국어로 쓴다.
