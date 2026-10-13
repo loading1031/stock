@@ -1,7 +1,7 @@
 # M0 설계: Claude·빌드 기반
 
 - 작성일: 2026-10-13
-- 상태: 초안 (B-01 진행 중. 작업지시서 "정할 것" 1~7번 결정, 8번과 7번의 머지 방식 남음)
+- 상태: 확정 (B-01, 2026-10-13). M0 구현은 아래 "M0 구현 체크리스트"로 한다
 - 관계: [plan.md](plan.md) 2장(스택)·4장(아키텍처)·7장 M0의 상세. 관련 문서: [work-orders.md](work-orders.md) B-01
 
 ## 결론
@@ -31,6 +31,10 @@ M0 스택을 실험 프로젝트로 직접 돌려 확인했다. Boot 4.1.1, Kotl
 | 코드 브랜치와 기획 문서 | 코드 브랜치에서는 `docs/planning/`을 고치지 않는다. 설계를 바꿔야 하면 기획 브랜치를 따로 연다. CLAUDE.md "코드 작업" 절만 코드 브랜치에서 `chore:`로 고친다 | 기획과 코드 커밋을 섞지 않는다(CLAUDE.md Git) |
 | 커밋과 이슈 | 커밋 본문 끝에 `Refs: #<이슈 번호>` trailer. 이슈는 PR 본문의 `Closes #<번호>`로 닫는다(커밋에는 쓰지 않는다) | 커밋에서 작업 기록(이슈)으로 바로 간다. 커밋의 `Closes`는 중간 커밋이 `main`에 들어갈 때 이슈를 닫아 버린다 |
 | 합치기 조건 | `./gradlew test`(ArchUnit 포함) 통과, 바뀐 클래스의 살아남은 뮤턴트 미분류 0, pre-commit 훅 통과. PR로 합친다 | |
+| 합치는 방식 | `--no-ff` 머지 커밋 (기획 브랜치와 같음) | 작업 하나를 머지 커밋 하나로 통째로 되돌릴 수 있다. 추적은 PR·이슈와 커밋의 `Refs:`로도 된다 |
+| 컨텍스트 로딩 테스트 | `@SpringBootTest` + `@Import(TestcontainersConfig)`. 설정 클래스 하나가 TimescaleDB 컨테이너를 `@ServiceConnection` 빈으로 두고 통합 테스트가 함께 쓴다. 빈 연결, Flyway V1, Hibernate `validate`, 앱이 앱 계정으로 접속하는지 확인 | kopring 테스트 컨벤션 1절. 실험 프로젝트에서 같은 구성이 동작했다 |
+| 샘플 도메인 클래스 | `order/domain/TickSize`: 가격이 호가 단위에 맞는지, 가장 가까운 유효 가격. 순수 함수 + 단위 테스트 | M3 주문 검증에 실제로 쓴다. 구간 경계가 많아 PIT 경계 뮤턴트 확인에 좋다 |
+| ArchUnit 첫 모양 | `ArchitectureTest` 하나에 "ArchUnit으로 검사할 것"의 규칙을 처음부터 모두 넣는다. 검사 대상이 빈 규칙은 허용(`archRule.failOnEmptyShould=false`) | 코드가 적을 때 넣어야 위반 없이 시작한다. M0에는 기능이 `order` 하나뿐이다 |
 | 모듈 간 이벤트 | Postgres Outbox 대신 **Spring Modulith 이벤트 발행 기록** (`spring-modulith-starter-jdbc`, PostgreSQL) | 같은 트랜잭션에 기록, 롤백이면 기록 없음, 리스너 실패 시 미완료로 남아 재전송 가능(실험). Outbox·릴레이·재전송을 직접 만들 필요가 없다 |
 
 ## 상세
@@ -130,6 +134,43 @@ ArchUnit으로 검사할 것:
 - **제안:** 이벤트 기록 테이블 DDL은 Flyway 마이그레이션에 넣고 자동 생성(`spring.modulith.events.jdbc.schema-initialization.enabled`)은 끈다. 완료 기록 정리(`completion-mode`)와 재전송 방식(재시작 시 / 주기 작업)은 M3에서 정한다.
 - 나중에 Kafka로 내보낼 때는 `@Externalized`를 쓴다(plan.md 6장 "Kafka 도입 조건"과 같은 경로).
 
+### M0 구현 체크리스트
+
+M0 구현 세션은 코드 브랜치 `feat/M0-foundation`에서 이 순서로 한다. 버전은 위 "확인한 버전" 표.
+
+**만들 파일**
+
+| 파일 | 내용 |
+|---|---|
+| `settings.gradle.kts` | `rootProject.name = "stock"`, foojay 툴체인 리졸버 1.0.0 |
+| `build.gradle.kts` | Kotlin 2.3.21(`jvm`, `plugin.spring`, `plugin.jpa`), Boot 4.1.1, dependency-management, JDK 25 툴체인, `-Xjsr305=strict`. 의존성: data-jpa, flyway + `flyway-database-postgresql`, Kotlin JDSL 3.9.0(`jpql-dsl`, `jpql-render`, `spring-data-jpa-support`), postgresql, `spring-boot-docker-compose`(developmentOnly), 테스트: starter-test, `spring-boot-testcontainers`, `testcontainers-postgresql`, `testcontainers-junit-jupiter`, `archunit-junit5` 1.5.1, `kotlin-test-junit5`. gradle-pitest-plugin 1.19.0 설정(위 "PIT 설정")과 `pitestChanged` 태스크 |
+| Gradle wrapper | `gradle wrapper --gradle-version 9.8.1` |
+| `compose.yaml` | `timescale/timescaledb:2.26.1-pg18`, 이름 있는 볼륨, `127.0.0.1:5432:5432`, 초기화 스크립트 마운트 |
+| `docker/postgres/init/01-roles.sql` | 소유자 계정(Flyway)과 앱 계정. 앱 계정에는 접속·사용 권한과 앞으로 만들 테이블의 기본 권한만 |
+| `.env.example` | 두 계정의 비밀번호 자리(값 없음). 실제 값은 `.env`(커밋 안 함) |
+| `src/main/resources/application.yml` | `spring.jpa.hibernate.ddl-auto: validate`, `open-in-view: false`, Flyway는 소유자 계정(`spring.flyway.user`), 데이터소스는 앱 계정 |
+| `src/main/resources/db/migration/V1__timescaledb.sql` | `CREATE EXTENSION IF NOT EXISTS timescaledb;` |
+| `src/main/kotlin/com/loading1031/stock/StockApplication.kt` | `@SpringBootApplication`, `@ConfigurationPropertiesScan` |
+| `…/order/domain/TickSize.kt` + `src/test/…/order/domain/TickSizeTest.kt` | 샘플 도메인. 경계값 테스트 |
+| `src/test/…/TestcontainersConfig.kt`, `ApplicationContextTest.kt` | 컨텍스트 로딩 테스트. 테스트 컨테이너에도 두 계정을 만든다(같은 초기화 스크립트) |
+| `src/test/…/ArchitectureTest.kt`, `src/test/resources/archunit.properties` | ArchUnit 규칙, `archRule.failOnEmptyShould=false` |
+| `/kopring:init hexagonal`이 만드는 것 | CLAUDE.md 컨벤션 선언, `.githooks/pre-commit`. 실행 뒤 `git config core.hooksPath .githooks` |
+
+**실행할 명령과 확인 방법**
+
+| 명령 | 확인 |
+|---|---|
+| `./gradlew test` | 전부 통과. 컨텍스트 로딩 테스트에서 `current_user`가 앱 계정 |
+| `./gradlew pitestChanged` (TickSize만 고친 상태) | TickSize만 대상이 되고, 살아남은 뮤턴트를 4분류해 미분류 0 |
+| `./gradlew pitestChanged` (아무것도 안 고친 상태) | PIT를 건너뛰고 성공 |
+| `./gradlew bootRun` | Compose로 DB가 자동으로 뜨고 앱이 시작됨. `127.0.0.1`에서만 접속됨 |
+| `.kt` 파일에 `Instant.now()`를 쓰려고 함 | kopring 훅이 `time/inject-clock`으로 막음 |
+| `git commit` | pre-commit 훅이 `.kt` 파일을 검사 |
+
+**구현 전에 확인할 것**
+- KRX 호가 단위 구간(2023년 개편안으로 알고 있음, **검증하지 않음**). KRX 공식 출처로 확인한 뒤 TickSize를 쓴다
+- ArchUnit `archRule.failOnEmptyShould`의 기본값과 설정 위치(**검증하지 않음**)
+
 ## 데이터 모델 영향
 
 - `outbox` 테이블 → Modulith 이벤트 기록 테이블(`event_publication`)로 바뀐다.
@@ -143,9 +184,8 @@ ArchUnit으로 검사할 것:
 
 ## 확인이 필요한 것
 
-- [ ] 작업지시서 7번 나머지: `main`에 합치는 방식(`--no-ff` 머지 커밋 유지 / 일렬로 합치기)
-- [ ] 작업지시서 8번: 컨텍스트 로딩 테스트와 샘플 도메인 클래스, ArchUnit 테스트의 첫 모양
-- [ ] M0 구현 체크리스트(만들 파일, 실행할 명령, 확인 방법)
+- [ ] KRX 호가 단위 구간 (TickSize 구현 전)
+- [ ] ArchUnit `archRule.failOnEmptyShould` 기본값과 설정 위치
 - [ ] Mac Docker에서 Ollama가 GPU를 못 쓰는지
 - [ ] Gradle 경고 `Configuration.setVisible` 사용 중단(Gradle 11에서 제거)이 어느 플러그인에서 나오는지
 - [ ] Modulith 리스너를 동기(`@TransactionalEventListener`만)로 두면 처리 순서가 지켜지는지 (시험하지 않음)

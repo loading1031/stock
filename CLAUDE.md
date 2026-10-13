@@ -97,7 +97,15 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 
 ## 코드 작업 (M0 이후)
 
-M0에서 `/kopring:init hexagonal`로 컨벤션 선언과 pre-commit 훅을 설치하고 이 절을 갱신한다. 그 전에는 애플리케이션 코드를 쓰지 않는다.
+M0에서 `/kopring:init hexagonal`로 컨벤션 선언과 pre-commit 훅을 설치하고 이 절을 확정한다. 그 전에는 애플리케이션 코드를 쓰지 않는다. M0 구현 순서는 `docs/planning/m0-foundation.md` "M0 구현 체크리스트".
+
+초안 (B-01, 2026-10-13. M0에서 확정):
+- JDK는 설치하지 않는다. Gradle 툴체인이 JDK 25를 받는다. 로컬 DB는 Docker Desktop을 켠 뒤 `./gradlew bootRun`(Compose 자동 실행). Ollama는 Mac에서 직접 실행
+- 커밋 전에 `./gradlew test`(컨텍스트 로딩·ArchUnit 포함)를 돌린다
+- 도메인·서비스 코드를 바꿨으면 `./gradlew pitestChanged`를 돌리고, 살아남은 뮤턴트를 4분류한다(테스트 추가 / 동등 / 쓸모없는 코드 삭제는 확인 후 / 보류). 미분류를 남기지 않고, 동등·보류의 이유는 커밋 본문에 쓴다
+- 현재 시각은 주입한 `Clock`에서, 소수는 `BigDecimal`에 반올림 방식을 명시해서(kopring 훅이 막는다)
+- 다른 기능은 `adapter/out`(상대 서비스 호출)과 이벤트 리스너에서만 참조한다(ArchUnit이 막는다)
+- 비밀값은 `.env`에만. App Secret은 비밀 타입으로 받는다(B-10)
 
 ## Git
 

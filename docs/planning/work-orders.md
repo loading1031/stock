@@ -65,7 +65,8 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 - 1~7번(7번은 머지 방식 빼고) 결정, 문서에 반영함: m0-foundation.md "결정 사항", plan.md, CLAUDE.md, log.md
 - 주문·체결 정합성(plan.md 4.6)도 이번에 정했고, 서브에이전트 정합성 검토 결과를 반영함
 - 플러그인: kopring 0.2.0(`56c54ed`), 마켓플레이스는 GitHub 소스
-- 다음 첫 행동: 7번 머지 방식을 묻고, 8번으로. 끝나면 M0 구현 체크리스트를 쓰고 `/planning:done`. `main`이 다른 폴더(`/Users/seongmun/Documents/stock`)에 열려 있으므로 합치기는 그 폴더에서 한다. 합친 뒤 이슈 #2 본문의 링크를 `main`으로 바꾼다
+- 7번 머지 방식(`--no-ff`)과 8번도 결정, M0 구현 체크리스트와 CLAUDE.md "코드 작업" 초안 작성함. 정할 것 없음
+- 다음 첫 행동: `/planning:done`. `main`이 다른 폴더(`/Users/seongmun/Documents/stock`)에 열려 있으므로 합치기는 그 폴더에서 한다. 합친 뒤 이슈 #2 본문의 링크를 `main`으로 바꾼다
 
 ---
 
