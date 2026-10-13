@@ -27,6 +27,7 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 - 용어: 아래 "용어" 절. "단계"라는 말은 쓰지 않는다
 - 기본 브랜치: main
 - 기획 브랜치: plan/<ID>-<slug> (예: plan/B-03-frontend)
+- 합치기 방식: PR (머지 커밋, PR 본문의 `Closes #<이슈>`로 이슈를 닫음)
 - 코드 브랜치: M0 이후에 정한다 (B-01)
 
 ### 동기화 표
@@ -57,7 +58,7 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 /planning:spec <주제>          결정을 문서에 반영 + 동기화 + log 기록 (기획 브랜치에서만)
 /planning:commit               docs: 커밋 (기획 브랜치에)
    ↓
-/planning:done                 백로그 완료 처리 → main에 --no-ff 합치기 → 브랜치 삭제 (확인 후)
+/planning:done                 백로그 완료 처리 → PR 만들고 머지 커밋으로 합치기 → 브랜치 삭제 (확인 후)
 /planning:handoff              세션을 마치기 전, 다음 세션용 작업지시서 갱신
 ```
 
@@ -113,5 +114,5 @@ M0에서 `/kopring:init hexagonal`로 컨벤션 선언과 pre-commit 훅을 설�
 - 원격: GitHub [loading1031/stock](https://github.com/loading1031/stock)(public). `.env`와 키·계좌번호는 절대 올리지 않는다.
 - 커밋 본문 끝에 `Refs: #<이슈 번호>`를 넣는다. B-18(이슈 이전) 전까지는 이슈가 있는 항목만(B-01 = #2), 없으면 `Refs: <백로그 ID>`. 이슈는 PR 본문의 `Closes #<번호>`로 닫는다.
 - 코드 브랜치: `<종류>/M<번호>-<slug>`(예: `feat/M1-auth`). 코드 브랜치에서는 `docs/planning/`을 고치지 않는다. 상세는 `docs/planning/m0-foundation.md`.
-- 이 폴더가 git worktree이고 `main`이 다른 폴더에 열려 있으면, `main`으로 합치는 일(`/planning:done`)은 `main`이 열린 폴더에서 한다.
+- 기획·코드 브랜치 모두 PR로 합친다(머지 커밋). git worktree에서 `main`이 다른 폴더에 열려 있으면 새 브랜치는 `origin/main`에서 만들고, 합친 뒤 `main`이 열린 폴더에서 `git pull --ff-only`로 맞춘다.
 - 문서는 한국어로 쓴다.
