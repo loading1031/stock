@@ -31,12 +31,12 @@
 
 | ID | 주제 | 브랜치 | 시작 |
 |---|---|---|---|
-| B-01 | M0 설계: Claude·빌드 기반 | `plan/B-01-m0-foundation` | 2026-10-12 |
 
 ## 완료
 
 | ID | 주제 | 결과 문서 | 날짜 |
 |---|---|---|---|
+| B-01 | M0 설계: Claude·빌드 기반 | [m0-foundation.md](m0-foundation.md), plan.md 4.6(주문·체결 정합성), 이슈 [#2](https://github.com/loading1031/stock/issues/2) | 2026-10-13 |
 | B-13 | 마켓플레이스 GitHub 업로드 | [loading1031/claude-plugins](https://github.com/loading1031/claude-plugins)(public), 마켓플레이스를 GitHub 소스로 다시 등록, CLAUDE.md "플러그인" | 2026-10-13 |
 
 ## 동기화 빚
