@@ -26,11 +26,11 @@
 | 구분 | 선택 | 비고 |
 |---|---|---|
 | 언어 / JDK | Kotlin 2.3 이상 / JDK 25 (LTS) | Kotlin 2.3부터 JVM 25 바이트코드 지원 |
-| 프레임워크 | Spring Boot 4.1.x | Spring Framework 7, Security 7, Hibernate 7.2, Jackson 3 |
+| 프레임워크 | Spring Boot 4.1.x | Spring Framework 7, Security 7, Hibernate 7.4, Jackson 3. 4.1.1 기준 실측 버전은 [m0-foundation.md](m0-foundation.md) |
 | 빌드 | Gradle 9.1 이상 (Kotlin DSL) | Gradle 9.1부터 JDK 25 지원 |
 | RDB | PostgreSQL | 인증, 계좌, 주문, 체결, 원장 |
 | 시계열 | TimescaleDB (Postgres 확장) | 시세, 캔들. RDB와 같은 인스턴스 |
-| 영속성 | Spring Data JPA + Kotlin JDSL (RDB), `JdbcClient` (시계열) | 4.3절 |
+| 영속성 | Spring Data JPA + Kotlin JDSL (RDB), `JdbcClient` (시계열. 일괄 삽입만 `NamedParameterJdbcTemplate`) | 4.3절 |
 | 증권사 API | KIS Developers REST + WebSocket | `@HttpExchange` HTTP Service Client |
 | 프론트엔드 | 별도 SPA (미정) | REST + WebSocket/SSE |
 | 로컬 실행 | Docker Compose (TimescaleDB 이미지) | |
@@ -187,8 +187,8 @@ CREATED ─(리스크 통과)→ SUBMITTING ─(증권사 접수)→ ACCEPTED �
 | 구조 | **out 포트 헥사고날** (kopring-conventions) | 증권사 외부 API와 시계열 DB가 있어 포트의 이점이 크다 |
 | 상태 저장 | **JPA + Kotlin JDSL** | 주문, 계좌, 원장은 트랜잭션과 제약 조건이 중요한 데이터다 |
 | 모듈 간 소통 | **Spring 내부 이벤트** (`@TransactionalEventListener(AFTER_COMMIT)`) | 주문 체결 → 포트폴리오 갱신 → 알림을 서로 모르게 연결 |
-| 유실되면 안 되는 이벤트 | **Postgres Outbox 테이블** | 체결 반영처럼 유실되면 잔고가 틀어지는 흐름. Kafka 없이 같은 트랜잭션으로 보장 |
-| 메시지 브로커 | **지금은 도입하지 않음** | 프로세스가 하나다. 서비스를 나누게 되면 Outbox를 Kafka로 내보내는 어댑터만 추가한다 |
+| 유실되면 안 되는 이벤트 | **Spring Modulith 이벤트 발행 기록** (JDBC, Postgres). 2026-10-13 Postgres Outbox 직접 구현에서 변경 | 체결 반영처럼 유실되면 잔고가 틀어지는 흐름. 업무 트랜잭션 안에 기록되고, 리스너가 실패하면 미완료로 남아 재전송한다. Outbox·릴레이를 직접 만들지 않는다 ([m0-foundation.md](m0-foundation.md)) |
+| 메시지 브로커 | **지금은 도입하지 않음** | 프로세스가 하나다. 서비스를 나누게 되면 이벤트 기록을 Kafka로 내보낸다(Modulith `@Externalized`) |
 | 이벤트 소싱 | **도입하지 않음** | 주문 상태 이력(`order_events`)과 원장으로 감사 추적은 충분하다 |
 
 이렇게 하면 나중에 브로커를 도입하더라도 **이벤트 클래스와 리스너 구조는 그대로**이고, 발행 어댑터만 바뀐다.
@@ -198,9 +198,9 @@ CREATED ─(리스크 통과)→ SUBMITTING ─(증권사 접수)→ ACCEPTED �
 | 데이터 | 도구 | 이유 |
 |---|---|---|
 | 사용자, 계좌, 주문, 체결, 원장, 전략 | Spring Data JPA + Kotlin JDSL | 컨벤션 기본값 |
-| 캔들, 체결 시세 (hypertable) | `JdbcClient` + SQL | `time_bucket` 같은 TimescaleDB 함수는 JPQL로 표현할 수 없다. Kotlin JDSL은 **JPQL만** 지원한다 |
+| 캔들, 체결 시세 (hypertable) | `JdbcClient` + SQL. 일괄 삽입은 `NamedParameterJdbcTemplate.batchUpdate` + `ON CONFLICT DO NOTHING` | `time_bucket` 같은 TimescaleDB 함수는 JPQL로 표현할 수 없다. Kotlin JDSL은 **JPQL만** 지원한다. Spring 7.0의 `JdbcClient`에는 배치가 없다(7.1에 추가 예정). JPA 쓰기, Exposed, jOOQ를 비교한 결과는 [m0-foundation.md](m0-foundation.md) |
 
-`adapter/out/timeseries`에서 SQL을 쓰는 것은 컨벤션의 "네이티브 SQL 금지"에 대한 **명시적 예외**로 둔다. 이 예외는 이 패키지에만 적용한다.
+`adapter/out/timeseries`에서 SQL을 쓰는 것은 컨벤션의 "네이티브 SQL 금지"에 대한 **명시적 예외**로 둔다. 이 예외는 이 패키지에만 적용한다. `JdbcClient`·`JdbcTemplate`은 kopring 훅이 `adapter/out`·`config` 밖에서 막는다(`arch/tech-client-outside-adapter`).
 
 ### 4.4 Kotlin JDSL 커스텀 DSL
 
@@ -235,6 +235,7 @@ com.<base>
 - 포트는 쓰는 쪽 기능이 가진다. 예: `order/application/port/out/PlaceOrderPort`
 - 증권사 어댑터는 `brokerage/adapter/out/external/<증권사>`에 모으고, 여러 기능의 포트를 구현한다.
 - 증권사 선택은 `config`의 라우팅 빈이 계좌의 증권사 종류를 보고 정한다(`di/selection-in-config-only`).
+- **기능 사이 의존** (2026-10-13 결정): 다른 기능은 두 곳에서만 참조한다. `adapter/out`은 부르는 쪽 포트를 구현하며 상대의 `application/service`를 호출하고, `adapter/in/messaging` 리스너는 상대의 `domain/event`를 받는다. 기능 간 순환은 금지하고, 반대 방향으로 알릴 때는 이벤트를 쓴다. ArchUnit으로 검사한다([m0-foundation.md](m0-foundation.md)).
 
 ### 4.6 주문 흐름
 
@@ -244,9 +245,22 @@ com.<base>
    → (커밋 후) OrderSubmitter        PlaceOrderPort → KIS 어댑터 → 증권사
    → ACCEPTED / FAILED / UNKNOWN 저장
 [체결통보 WebSocket] or [주기 조회]
-   → ExecutionService.record()       체결 ID로 중복 제거, Order 상태 갱신, Outbox에 OrderFilled 기록
-   → Outbox 릴레이 → PortfolioService(원장·보유 갱신), 알림, 전략 상태
+   → ExecutionService.record()       계좌 잠금, 체결 ID로 중복 제거, Order 상태 갱신, OrderFilled 발행(이벤트 기록)
+   → (커밋 후) 리스너 → PortfolioService(원장·보유 갱신), 알림, 전략 상태
 ```
+
+**주문·체결 흐름의 정합성 (제안, 2026-10-13)** — 실험 프로젝트에서 PostgreSQL 동작을 재현해 확인한 것을 바탕으로 했다.
+
+| 장치 | 막는 것 |
+|---|---|
+| 주문과 체결 저장 때 계좌 행 잠금(`SELECT … FOR UPDATE`). 잠금은 별도 문장으로 먼저 걸고, 조회·저장은 그다음 문장에서 | 동시 주문으로 돈을 두 번 쓰는 것. 같은 계좌의 체결 id 순서와 커밋 순서가 어긋나는 것 |
+| 증권사 체결 ID `UNIQUE` + `ON CONFLICT DO NOTHING` | 실시간 통보와 주기 조회로 같은 체결이 두 번 저장되는 것 |
+| 리스너는 이벤트를 신호로만 쓰고, 계좌를 잠근 뒤 아직 반영하지 않은 체결을 id 순으로 반영. 반영 여부는 현금 원장의 `ref_id`로 판별 | 리스너 비동기 실행으로 반영 순서가 바뀌는 것(매도 실현 손익이 달라짐), 중복 반영 |
+| 체결 기록은 추가만 한다(앱 계정의 `UPDATE`·`DELETE` 권한 제거 또는 트리거) | 기록 변조, 지워져서 생기는 누락 |
+| 대사(KIS 체결 내역 ↔ 우리 기록) | 저장 자체가 안 된 체결 |
+
+- 확인한 PostgreSQL 동작: id는 `INSERT` 때 시퀀스에서 받고 다른 트랜잭션에는 `COMMIT` 뒤에 보인다. 그래서 잠금 없이 "마지막으로 본 id 이후"를 읽으면 늦게 커밋된 작은 id를 건너뛴다. `INSERT`는 같은 고유 키를 넣을 때만 서로 기다린다. 잠금을 거는 문장 안의 다른 테이블 조회는 기다리기 전 스냅샷을 쓴다.
+- 체결 기록(order), 현금 원장(portfolio), 보유 상태(portfolio)는 다른 테이블이다. 테이블 이름 규칙과 잔고 구조는 [backlog.md](backlog.md) B-17.
 
 ## 5. 데이터 모델 초안
 
@@ -265,7 +279,7 @@ com.<base>
 | `strategies` / `strategy_runs` / `signals` | 전략 정의·파라미터, 실행 기록, 신호 |
 | 전략 운영 테이블 | `position_plans`, `plan_tranches`, `decisions`, `news_articles` 등 — [strategy.md](strategy.md) 18장 |
 | `risk_limits` | account_id, 규칙별 한도, kill_switch |
-| `outbox` | id, event_type, payload, created_at, published_at |
+| `event_publication` | Spring Modulith 이벤트 발행 기록. 스키마는 Modulith가 정한다. DDL은 Flyway에 넣는다(제안) |
 | `candles` (hypertable) | instrument, venue(KRX/NXT/통합), interval, bucket_start, open, high, low, close, volume |
 | `global_series` | series_id(예: `US:NVDA`, `CME:ES`, `KRX:K200F-NIGHT`), source, kind(STOCK/FUTURE/MACRO), contract(월물, nullable), unit, timezone |
 | `global_bars` (hypertable) | series_id, interval, observed_at, open, high, low, close, volume, **available_at** |
@@ -288,10 +302,10 @@ com.<base>
 
 | 마일스톤 | 내용 | 완료 기준 |
 |---|---|---|
-| M0 | Claude 설정(`/kopring:init`, 거래 규칙, 훅), Gradle, Docker Compose, Flyway, 컨텍스트 로딩 테스트, ArchUnit, 뮤테이션 테스트(PIT, 변경분 실행) | `./gradlew test` 통과, 훅 동작, `pitestChanged`가 샘플 도메인 클래스에서 동작 |
+| M0 | Claude 설정(`/kopring:init`, 거래 규칙, 훅), Gradle, Docker Compose, Flyway, 컨텍스트 로딩 테스트, ArchUnit, 뮤테이션 테스트(PIT, 변경분 실행). 설계: [m0-foundation.md](m0-foundation.md) | `./gradlew test` 통과(ArchUnit 포함), 훅 동작, `pitestChanged`가 샘플 도메인 클래스에서 동작 |
 | M1 | 인증(JWT + Refresh), 계좌 연결(암호화 저장), KIS 토큰 발급 | 프론트에서 로그인 후 모의 계좌 잔고 조회 |
 | M2 | 종목 마스터, 시장·세션 캘린더, KRX Open API 일봉 백필, 분봉 수집, 실시간 시세 중계, 해외 일봉·지수 선물·KOSPI200 야간선물 수집 | 차트에 캔들 표시, 실시간 가격 갱신, 아침 07:00에 간밤 해외·야간선물 지표가 채워짐 |
-| M3 | 수동 주문, 상태 머신, 체결 수신, 포트폴리오·원장, Outbox | 모의 계좌에서 매수 → 체결 → 잔고 반영 |
+| M3 | 수동 주문, 상태 머신, 체결 수신, 포트폴리오·원장, 이벤트 발행 기록(Modulith) | 모의 계좌에서 매수 → 체결 → 잔고 반영 |
 | M4 | 대사, 리스크 규칙, 킬 스위치 | 일부러 상태를 어긋나게 한 뒤 대사로 복구 |
 | M5 | 아침 파이프라인, 시장 국면, 포지션 계획·사이징, 강제 청산, 뉴스 수집, jev 판단, 기준선 가상 장부 | 모의 계좌에서 자동매매 1주 무중단, 모든 판단이 `decisions`에 기록됨 |
 | M6 | 백테스트 | 같은 전략의 백테스트와 모의 운용 결과 비교 |
@@ -313,4 +327,4 @@ com.<base>
 - [ ] KIS 해외선물(CME ES·NQ) 시세 신청 절차와 비용, 모의투자 지원 여부
 - [ ] 환율·금리·VIX를 KIS에서 받을 수 있는지 (없으면 FRED)
 - [ ] 토스증권 Open API(2026-08 정식 출시)의 모의투자 지원 여부, 실시간 스트림 지원 여부 — 두 번째 증권사 후보
-- [ ] Zed의 Kotlin LSP가 Kotlin 2.3 이상과 JDK 25에서 정상 동작하는지
+- [x] Zed의 Kotlin LSP가 Kotlin 2.3 이상과 JDK 25에서 정상 동작하는지 — 2026-10-12 `kotlin-lsp` 263.6379.0으로 확인([m0-foundation.md](m0-foundation.md)). Zed 화면에서는 보지 않음

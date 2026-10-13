@@ -2,6 +2,21 @@
 
 최신이 위. 형식은 planning 플러그인의 `rules` 스킬.
 
+## 2026-10-13 update | 모듈 간 이벤트: Postgres Outbox → Spring Modulith 이벤트 발행 기록
+- 결정: 유실되면 안 되는 이벤트는 직접 만든 Outbox 테이블·릴레이 대신 Spring Modulith 이벤트 발행 기록(JDBC, Postgres)으로 보장한다
+- 이유: 실험에서 업무 트랜잭션 안 기록, 롤백 시 기록 없음, 리스너 실패 시 미완료로 남고 재전송 가능을 확인. Outbox·릴레이·재전송을 직접 만들 필요가 없다. 리스너가 비동기라 처리 순서는 보장되지 않으므로, 리스너는 이벤트를 신호로만 쓰고 저장된 체결을 id 순으로 반영한다(plan.md 4.6 제안)
+- 바뀐 문서: plan.md 4.2·4.6·5장(`outbox` → `event_publication`)·7장 M3, CLAUDE.md 결정된 사항, m0-foundation.md
+- 남은 것: 재전송 방식과 완료 기록 정리는 M3에서. 시각화 문서는 동기화 빚
+
+## 2026-10-13 decide | M0 설계 1차 (B-01)
+- 결정: Gradle 단일 모듈 + 기능 우선 패키지, 기본 패키지 `com.loading1031.stock`
+- 결정: PIT 변경분 실행은 `git diff`로 대상 클래스를 넘긴다(Arcmutate 안 씀), `avoidCallsTo = kotlin.jvm.internal`
+- 결정: kopring 범용 규칙 4개 추가(`time/inject-clock`, `bigdecimal/rounding-mode`, `bigdecimal/no-double-ctor`, `log/no-secret`), `JdbcClient`를 어댑터 전용으로. 플러그인 0.2.0
+- 결정: 시계열은 읽기·쓰기 모두 SQL(`JdbcClient`, 일괄 삽입은 `NamedParameterJdbcTemplate`). JPA 쓰기·Exposed·jOOQ는 쓰지 않음
+- 결정: 기능 사이 의존은 `adapter/out`(상대 서비스 호출)과 이벤트 리스너(상대 이벤트 수신)에서만, 순환 금지. ArchUnit 직접 작성으로 검사(Modulith `verify()`는 안 씀)
+- 바뀐 문서: m0-foundation.md 신설, plan.md 2장·4.3·4.5·4.6·7장 M0·8장, CLAUDE.md 문서·결정된 사항, backlog.md B-10·B-15·B-16·B-17
+- 남은 것: 작업지시서 B-01 "정할 것" 5번 나머지, 6·7·8번
+
 ## 2026-10-10 decide | 작업지시서
 - 결정: 세션이 바뀌어도 이어지도록 항목별 작업지시서(work-orders.md)를 둔다. pick이 먼저 읽고, done이 지우고, 세션 끝에 /planning:handoff로 갱신
 - 바뀐 문서: work-orders.md 신설(B-01, B-03, B-02, B-13, B-14, 동기화), CLAUDE.md, planning 플러그인 0.3.0

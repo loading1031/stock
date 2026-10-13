@@ -9,6 +9,7 @@
 | 파일 | 내용 |
 |---|---|
 | `docs/planning/plan.md` | 전체 기획: 기능, 아키텍처, 데이터 모델, 마일스톤(M0~M7), 확인 필요 항목 |
+| `docs/planning/m0-foundation.md` | M0 설계: 실측 버전, 실험 결과, 빌드·구조·이벤트 결정 (B-01) |
 | `docs/planning/strategy.md` | 운영 전략: 워크플로(Mermaid), jev 배치, 위험 예산, 포지션 계획, 매도, 교체 매매, 평가 |
 | `docs/planning/backlog.md` | 다음에 기획할 후보 목록 |
 | `docs/planning/work-orders.md` | **작업지시서**: 다음 세션이 이전 대화 없이 시작하도록 항목별로 적은 것. 세션 시작 시 여기부터 |
@@ -74,12 +75,13 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 |---|---|
 | 스택 | JDK 25, Kotlin 2.3+, Spring Boot 4.1, Gradle 9.1+, PostgreSQL + TimescaleDB, Docker Compose |
 | 에디터 | Zed + Claude Code |
-| 구조 | 모듈러 모놀리스, out 포트 헥사고날, 기능 우선 패키지 (`kopring` 플러그인, M0에서 `/kopring:init`) |
-| 영속성 | JPA + Kotlin JDSL. 시계열만 `JdbcClient` + SQL (명시적 예외) |
-| 모듈 간 소통 | Spring 내부 이벤트 + Postgres Outbox. Kafka·Redis·R2DBC는 쓰지 않음 |
+| 구조 | 모듈러 모놀리스, out 포트 헥사고날, 기능 우선 패키지 (`kopring` 플러그인, M0에서 `/kopring:init`). 단일 Gradle 모듈, 기본 패키지 `com.loading1031.stock` |
+| 기능 경계 | 다른 기능은 `adapter/out`(상대 `application/service` 호출)과 이벤트 리스너(상대 `domain/event` 수신)에서만 참조. 순환 금지. ArchUnit으로 검사 |
+| 영속성 | JPA + Kotlin JDSL. 시계열만 `JdbcClient` + SQL (명시적 예외, 일괄 삽입은 `NamedParameterJdbcTemplate`) |
+| 모듈 간 소통 | Spring 내부 이벤트 + Spring Modulith 이벤트 발행 기록(Postgres). Kafka·Redis·R2DBC는 쓰지 않음 |
 | 증권사·데이터 | KIS Open API (주문, 국내·해외 시세, 선물). 과거 일봉 백필은 KRX Open API |
 | 판단 모델 | Ollama 결정 모델 jev(`nimble`). 판단만, 숫자는 코드, 한도는 규칙 |
-| 테스트 | JUnit, 뮤테이션 테스트 PIT(변경분 실행) |
+| 테스트 | JUnit 6, 뮤테이션 테스트 PIT(변경분은 `git diff`로 대상 지정), ArchUnit |
 
 ## 플러그인
 
