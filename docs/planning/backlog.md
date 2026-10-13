@@ -43,7 +43,6 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-03을 먼
 
 | ID | 주제 | 브랜치 | 이슈 | 시작 |
 |---|---|---|---|---|
-| B-18 | 기획 관리를 GitHub 이슈로 | `plan/B-18-github-issues` | [#4](https://github.com/loading1031/stock/issues/4) | 2026-10-14 |
 
 ## 완료
 
@@ -51,6 +50,7 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-03을 먼
 |---|---|---|---|
 | B-01 | M0 설계: Claude·빌드 기반 | [m0-foundation.md](m0-foundation.md), plan.md 4.6(주문·체결 정합성), 이슈 [#2](https://github.com/loading1031/stock/issues/2) | 2026-10-13 |
 | B-13 | 마켓플레이스 GitHub 업로드 | [loading1031/claude-plugins](https://github.com/loading1031/claude-plugins)(public), 마켓플레이스를 GitHub 소스로 다시 등록, CLAUDE.md "플러그인" | 2026-10-13 |
+| B-18 | 기획 관리를 GitHub 이슈로 | 작업지시서 = 이슈(라벨 `plan`), planning 0.5.0, CLAUDE.md "기획 진행 방식"·"Git", 이슈 [#4](https://github.com/loading1031/stock/issues/4) | 2026-10-14 |
 
 ## 동기화 빚
 
