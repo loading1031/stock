@@ -12,7 +12,7 @@
 | `docs/planning/m0-foundation.md` | M0 설계: 실측 버전, 실험 결과, 빌드·구조·이벤트 결정 (B-01) |
 | `docs/planning/strategy.md` | 운영 전략: 워크플로(Mermaid), jev 배치, 위험 예산, 포지션 계획, 매도, 교체 매매, 평가 |
 | `docs/planning/backlog.md` | 다음에 기획할 후보 목록 |
-| `docs/planning/work-orders.md` | **작업지시서**: 다음 세션이 이전 대화 없이 시작하도록 항목별로 적은 것. 세션 시작 시 여기부터 |
+| GitHub 이슈 (라벨 [`plan`](https://github.com/loading1031/stock/issues?q=label%3Aplan)) | **작업지시서**: 항목마다 이슈 하나(본문 = 지시서, 댓글 = 진행 메모). 다음 세션이 이전 대화 없이 시작하도록 쓴다. 번호는 backlog.md의 이슈 칸 |
 | `docs/planning/log.md` | 기획 결정 이력 |
 | 시각화 문서 (Claude Docs) | https://claude.ai/code/artifact/a712f001-c5c0-4731-8015-d1bed440fac6 — 다이어그램 모음 |
 
@@ -28,6 +28,7 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 - 기본 브랜치: main
 - 기획 브랜치: plan/<ID>-<slug> (예: plan/B-03-frontend)
 - 합치기 방식: PR (머지 커밋, PR 본문의 `Closes #<이슈>`로 이슈를 닫음)
+- 작업지시서: issue (GitHub 이슈, 라벨 `plan`. 진행 메모는 댓글)
 - 코드 브랜치: M0 이후에 정한다 (B-01)
 
 ### 동기화 표
@@ -59,8 +60,17 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 /planning:commit               docs: 커밋 (기획 브랜치에)
    ↓
 /planning:done                 백로그 완료 처리 → PR 만들고 머지 커밋으로 합치기 → 브랜치 삭제 (확인 후)
-/planning:handoff              세션을 마치기 전, 다음 세션용 작업지시서 갱신
+/planning:handoff              세션을 마치기 전, 이슈에 진행 메모 댓글·다음 후보 지시서 이슈
 ```
+
+**세션 시작**
+1. `/planning:`을 입력했을 때 `backlog`, `spec`, `commit`, `done`, `handoff`가 자동완성되는지 확인. 안 되면 셸에서 `claude plugin list`로 `planning@loading1031-plugins`(0.5.0 이상), `kopring@loading1031-plugins`가 enabled인지 확인
+2. `git status`가 깨끗하고 `main`인지 확인(진행 중인 브랜치가 있으면 그 브랜치로)
+3. `/planning:backlog` → backlog.md "권장 순서"에서 고르고 `/planning:backlog pick <ID>` (이슈를 읽고 시작)
+
+**세션 종료**
+1. 결정된 것은 `/planning:spec` → `/planning:commit`
+2. 항목이 끝났으면 `/planning:done`. 안 끝났으면 브랜치를 두고 `/planning:handoff`로 이슈에 진행 메모 댓글
 
 - 설정·도구 변경(`chore:`)은 main에 바로 커밋해도 된다. 기획(`docs:`)은 기획 브랜치에서 한다.
 
@@ -112,7 +122,7 @@ M0에서 `/kopring:init hexagonal`로 컨벤션 선언과 pre-commit 훅을 설�
 
 - 커밋은 `/planning:commit` 규칙을 따른다. 기획(`docs:`)과 코드 커밋을 섞지 않는다.
 - 원격: GitHub [loading1031/stock](https://github.com/loading1031/stock)(public). `.env`와 키·계좌번호는 절대 올리지 않는다.
-- 커밋 본문 끝에 `Refs: #<이슈 번호>`를 넣는다. B-18(이슈 이전) 전까지는 이슈가 있는 항목만(B-01 = #2), 없으면 `Refs: <백로그 ID>`. 이슈는 PR 본문의 `Closes #<번호>`로 닫는다.
-- 코드 브랜치: `<종류>/M<번호>-<slug>`(예: `feat/M1-auth`). 코드 브랜치에서는 `docs/planning/`을 고치지 않는다. 상세는 `docs/planning/m0-foundation.md`.
+- 커밋 본문 끝에 `Refs: #<이슈 번호>`를 넣는다. 번호는 backlog.md의 이슈 칸. 이슈가 아직 없는 항목이면 `Refs: <백로그 ID>`. 이슈는 PR 본문의 `Closes #<번호>`로 닫는다.
+- 코드 브랜치: `<종류>/M<번호>-<slug>`(예: `feat/M1-auth`), 작업에 이슈가 있으면 `<종류>/<이슈 번호>-<slug>`. 코드 브랜치에서는 `docs/planning/`을 고치지 않는다. 상세는 `docs/planning/m0-foundation.md`.
 - 기획·코드 브랜치 모두 PR로 합친다(머지 커밋). git worktree에서 `main`이 다른 폴더에 열려 있으면 새 브랜치는 `origin/main`에서 만들고, 합친 뒤 `main`이 열린 폴더에서 `git pull --ff-only`로 맞춘다.
 - 문서는 한국어로 쓴다.

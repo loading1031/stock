@@ -2,7 +2,7 @@
 
 - 작성일: 2026-10-13
 - 상태: 확정 (B-01, 2026-10-13). M0 구현은 아래 "M0 구현 체크리스트"로 한다
-- 관계: [plan.md](plan.md) 2장(스택)·4장(아키텍처)·7장 M0의 상세. 관련 문서: [work-orders.md](work-orders.md) B-01
+- 관계: [plan.md](plan.md) 2장(스택)·4장(아키텍처)·7장 M0의 상세. 관련 문서: 이슈 [#2](https://github.com/loading1031/stock/issues/2) (B-01 작업지시서)
 
 ## 결론
 
