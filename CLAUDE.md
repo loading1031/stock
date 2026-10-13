@@ -81,18 +81,19 @@ planning 플러그인(/planning:backlog → /planning:spec → /planning:commit 
 | 모듈 간 소통 | Spring 내부 이벤트 + Spring Modulith 이벤트 발행 기록(Postgres). Kafka·Redis·R2DBC는 쓰지 않음 |
 | 증권사·데이터 | KIS Open API (주문, 국내·해외 시세, 선물). 과거 일봉 백필은 KRX Open API |
 | 판단 모델 | Ollama 결정 모델 jev(`nimble`). 판단만, 숫자는 코드, 한도는 규칙 |
-| 테스트 | JUnit 6, 뮤테이션 테스트 PIT(변경분은 `git diff`로 대상 지정), ArchUnit |
+| 테스트 | JUnit 6, 뮤테이션 테스트 PIT(`domain`·`application/service`, 변경분은 `git diff`로 대상 지정, 기준선 없음), ArchUnit |
+| 로컬 실행 | Docker Compose는 TimescaleDB만(`2.26.1-pg18`, `127.0.0.1`), Ollama는 Mac에서 직접. Flyway 계정과 앱 계정 분리 |
 
 ## 플러그인
 
-이 프로젝트는 `.claude/settings.json`에서 아래 플러그인을 켠다. 마켓플레이스는 `~/Documents/claude-plugins` (`loading1031-plugins`).
+이 프로젝트는 `.claude/settings.json`에서 아래 플러그인을 켠다. 마켓플레이스 `loading1031-plugins`는 GitHub [loading1031/claude-plugins](https://github.com/loading1031/claude-plugins)(public)에서 받는다. 로컬 편집 저장소는 `~/Documents/claude-plugins`.
 
 | 플러그인 | 쓰임 |
 |---|---|
 | `planning` | 기획 진행 (`/planning:backlog`, `/planning:spec`, `/planning:commit`) |
 | `kopring` | Kotlin + Spring 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 |
 
-플러그인 자체를 고칠 때는 마켓플레이스 저장소에서 고친다. 이 저장소에 규칙·명령을 복사하지 않는다.
+플러그인 자체를 고칠 때는 마켓플레이스 저장소에서 고친다. 이 저장소에 규칙·명령을 복사하지 않는다. 고친 뒤 GitHub에 push하고 `claude plugin marketplace update loading1031-plugins`를 실행해야 반영된다(로컬 폴더를 고치는 것만으로는 적용되지 않는다).
 
 ## 코드 작업 (M0 이후)
 
@@ -101,4 +102,8 @@ M0에서 `/kopring:init hexagonal`로 컨벤션 선언과 pre-commit 훅을 설�
 ## Git
 
 - 커밋은 `/planning:commit` 규칙을 따른다. 기획(`docs:`)과 코드 커밋을 섞지 않는다.
+- 원격: GitHub [loading1031/stock](https://github.com/loading1031/stock)(public). `.env`와 키·계좌번호는 절대 올리지 않는다.
+- 커밋 본문 끝에 `Refs: #<이슈 번호>`를 넣는다. B-18(이슈 이전) 전까지는 이슈가 있는 항목만(B-01 = #2), 없으면 `Refs: <백로그 ID>`. 이슈는 PR 본문의 `Closes #<번호>`로 닫는다.
+- 코드 브랜치: `<종류>/M<번호>-<slug>`(예: `feat/M1-auth`). 코드 브랜치에서는 `docs/planning/`을 고치지 않는다. 상세는 `docs/planning/m0-foundation.md`.
+- 이 폴더가 git worktree이고 `main`이 다른 폴더에 열려 있으면, `main`으로 합치는 일(`/planning:done`)은 `main`이 열린 폴더에서 한다.
 - 문서는 한국어로 쓴다.

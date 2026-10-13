@@ -88,25 +88,26 @@
 - 수동 주문: 프론트엔드에서 매수, 매도, 정정, 취소. 지정가와 시장가.
 - 주문에 집행 시장을 둔다: `KRX`, `NXT`, `SOR`(증권사가 유리한 시장으로 라우팅). 어느 시장에서 산 주식이든 같은 주식이므로 보유 수량은 시장과 무관하게 하나로 관리한다. 결제는 두 시장 모두 T+2이고 예탁결제원이 통합 처리한다.
 - 프리·애프터마켓에서는 지정가만 허용한다. KIS API가 NXT·SOR 주문을 어떻게 구분하는지는 확인 필요.
-- **모의투자의 제약** (2차 자료 기준, M0에서 실측): 시간외 거래 불가, 주문 유형은 지정가·시장가·최유리·최우선만, 지정가는 실제 시장에서 그 가격에 체결이 생겨야 실제 체결량만큼만 체결된다. 그래서 모의 운영은 **정규장 + 지정가·시장가만** 쓰고, NXT·시간외·IOC/FOK는 실전 운영 초기에 처음 검증한다.
+- **모의투자의 제약** (2차 자료 기준, B-02에서 실측): 시간외 거래 불가, 주문 유형은 지정가·시장가·최유리·최우선만, 지정가는 실제 시장에서 그 가격에 체결이 생겨야 실제 체결량만큼만 체결된다. 그래서 모의 운영은 **정규장 + 지정가·시장가만** 쓰고, NXT·시간외·IOC/FOK는 실전 운영 초기에 처음 검증한다.
 - 자동 주문: 전략이 낸 신호가 리스크 검사를 통과하면 주문한다(3.6).
 - 주문 상태 머신:
 
 ```
 CREATED ─(리스크 통과)→ SUBMITTING ─(증권사 접수)→ ACCEPTED ─→ PARTIALLY_FILLED ─→ FILLED
    │                       │                          │                │
-   └→ REJECTED(리스크)      └→ FAILED(전송 실패/불명)   └→ CANCELLED     └→ CANCELLED(잔량)
+   └→ REJECTED(리스크)      ├→ FAILED(전송 실패)        └→ CANCELLED     └→ CANCELLED(잔량)
+                           └→ UNKNOWN(응답 없음 → 조회로 확인)
 ```
 
 - 주문마다 내부 `clientOrderId`(멱등 키)를 둔다. 증권사 주문번호와 짝지어 저장한다.
 - **증권사 호출이 타임아웃되면 재전송하지 않는다.** 상태를 `UNKNOWN`으로 두고 주문 조회 API로 실제 상태를 확인한다(3.8 대사).
-- 체결은 체결통보(WebSocket)와 주기적 조회 두 경로로 받고, 체결 ID로 중복을 막는다.
+- 체결은 체결통보(WebSocket)와 주기적 조회 두 경로로 받는다. KIS는 체결 고유 번호를 주지 않으므로, 주문별 누적 상태로 기록하고 조회 누계로 바로잡는다(4.6).
 
 ### 3.5 포트폴리오 (portfolio)
 
 - 보유 종목(수량, 평균단가), 현금, 평가손익, 실현손익.
 - 현금 변동은 **원장(ledger)에 추가만** 하고, 잔고는 원장에서 계산하거나 원장과 같은 트랜잭션에서 갱신한다.
-- 수수료와 세금을 체결 단위로 기록한다. 요율은 코드에 두지 않고 계좌 환경별 설정값으로 둔다. 모의투자는 수수료 0.0142%, 세금 0.20%로 알려져 있다(**검증하지 않음**). 실제 계산은 증권사 체결 내역의 값을 우선한다.
+- 수수료와 세금은 끝난 주문 단위로 금액 원장에 기록한다(4.6). 확정 값을 어느 API에서 받는지는 8장. 요율은 코드에 두지 않고 계좌 환경별 설정값으로 둔다. 모의투자는 수수료 0.0142%, 세금 0.20%로 알려져 있다(**검증하지 않음**). 실제 계산은 증권사 체결 내역의 값을 우선한다.
 
 ### 3.6 전략과 자동매매 (strategy)
 
@@ -123,6 +124,9 @@ CREATED ─(리스크 통과)→ SUBMITTING ─(증권사 접수)→ ACCEPTED �
 ### 3.7 리스크 관리 (risk)
 
 모든 자동 주문은 리스크 검사를 거친다. 수동 주문도 같은 검사를 쓰되, 일부 한도는 경고만 한다.
+
+- 검사는 두 번 한다(2026-10-13 결정). **결정할 때**는 사이징이 한도를 입력으로 써서 한도 안의 수량을 계산한다(트랜잭션 불필요). **주문을 저장할 때**는 계좌를 잠근 채 지금 상태로 다시 확인하고, 통과하면 같은 트랜잭션에서 금액·수량을 묶는다(4.6).
+- 저장 트랜잭션에서 잠금이 필요한 것은 다른 주문과 함께 쓰는 상태에 기대는 규칙뿐이다: 주문 가능 금액, 매도 가능 수량, 종목당 비중, 일일 손실. 주문당 금액·거래 시간·킬 스위치·계획 외 매수는 그 순간 값만 확인한다.
 
 | 규칙 | 예 |
 |---|---|
@@ -241,12 +245,13 @@ com.<base>
 
 ```
 [전략 신호] or [프론트 주문]
-   → OrderService.place()            @Transactional: Order(CREATED) 저장, 리스크 검사
+   → OrderService.place()            @Transactional: 계좌 잠금, 리스크 검사, 금액·수량 묶음, Order(CREATED) 저장
    → (커밋 후) OrderSubmitter        PlaceOrderPort → KIS 어댑터 → 증권사
    → ACCEPTED / FAILED / UNKNOWN 저장
 [체결통보 WebSocket] or [주기 조회]
-   → ExecutionService.record()       계좌 잠금, 체결 ID로 중복 제거, Order 상태 갱신, OrderFilled 발행(이벤트 기록)
-   → (커밋 후) 리스너 → PortfolioService(원장·보유 갱신), 알림, 전략 상태
+   → ExecutionService.record()       REQUIRES_NEW: 계좌 잠금, 누적 상태 기록 INSERT, Order 상태 갱신
+   → 주문이 끝나면 OrderFinished 발행(이벤트 기록)
+   → (커밋 후) 리스너 → PortfolioService(금액 원장·보유 갱신, 묶음 해제), 알림, 전략 상태
 ```
 
 **주문·체결 흐름의 정합성 (2026-10-13)** — KIS 공식 예제 코드의 필드 정의와, 실험 프로젝트에서 재현한 PostgreSQL 동작을 바탕으로 했다.
@@ -264,33 +269,37 @@ KIS가 주는 정보 ([open-trading-api](https://github.com/koreainvestment/open
 - **통보는 전부 저장한다.** 접수·정정·취소·거부·체결을 받은 그대로, 추가만 한다. 처리와 상관없이 먼저 저장하고 커밋한다.
 - **기록은 "이 시점 주문의 누적 상태"로 저장한다.** 상태, 누적 체결 수량, 누적 체결 금액. 통보를 놓쳐도 역산하지 않는다. 가장 마지막 기록이 그 주문의 현재 상태다.
 - **동기화:** 오래 상태가 안 바뀐 주문과 장 마감 뒤 그날 주문 전체를 주기 조회로 확인하고, KIS가 준 누계를 그대로 기록한다.
-- **금액 원장은 끝난 주문만 받는다.** 끝난 주문 1건 = 금액 원장 1건, 최종 누적 금액 그대로. 진행 중에는 매수 금액·매도 수량을 **묶기만 하고 차감하지 않는다.**
+- **금액 원장은 끝난 주문만 받는다.** 끝난 주문 1건 = 금액 원장의 **유형별 1행**(`BUY`/`SELL` 대금, `FEE`, `TAX`), 금액은 최종 누적값 그대로. 진행 중에는 매수 금액·매도 수량을 **묶기만 하고 차감하지 않는다.**
+- **"끝난 주문"**: 전부 체결, 일부 체결 후 취소, 일부 체결 후 장 마감 소멸, 체결 없이 취소·거부. 장 마감 소멸을 KIS가 통보하는지는 8장 확인. 통보가 없으면 장 마감 뒤 조회로 판정한다.
+- **원장 확정 전 확인:** 주문이 끝나면 금액 원장에 넣기 전에 KIS 조회로 누계를 한 번 확인한다. 확정 뒤에 차이가 발견되면 지우지 않고 `ADJUST` 행으로 맞춘다.
+- **묶음 시점:** 우리 쪽 주문 저장(리스크 검사)과 같은 트랜잭션에서, 계좌를 잠근 채로 묶는다(3.7). 묶을 금액은 지정가 × 수량 + 예상 수수료.
 - **매도 가능 수량과 주문 가능 금액은 누적 상태 기록과 묶음으로 계산한다.** 금액 원장을 기다리지 않는다.
-- **순서:** 한 주문 안의 체결은 모두 같은 방향이라 반영 순서가 결과를 바꾸지 않는다. 금액 원장의 순서는 주문이 끝난 순서다. 같은 종목의 매수·매도 사이에서 달라질 수 있는 실현 손익은 KIS 잔고와 대사한다.
-- 거래 기록은 절대 삭제할 수 없게 보장한다.
+- **순서:** 한 주문 안의 체결은 모두 같은 방향이라 반영 순서가 결과를 바꾸지 않는다. 리스너는 비동기라 처리 순서가 보장되지 않으므로, 이벤트를 신호로만 쓰고 **계좌를 잠근 뒤 아직 반영하지 않은 끝난 주문을 끝난 시각 순으로** 반영한다. 같은 종목의 매수·매도 사이에서 달라질 수 있는 실현 손익은 KIS 잔고와 대사한다.
+- 거래 기록은 앱 계정으로는 수정·삭제할 수 없게 한다(아래 장치).
 - 외부 시스템이 붙인 식별자 칼럼은 모두 `external_id`로 부른다. 그 값을 멱등키(`UNIQUE`)로 쓸지는 테이블마다 정한다.
 
 처리 흐름:
 
 ```
-주문 접수      → 매수는 금액, 매도는 수량을 묶음 (차감 안 함)
+주문 저장      → 계좌 잠금 → 리스크 검사 → 매수는 금액, 매도는 수량을 묶음 (차감 안 함) → COMMIT
 통보 수신      → 계좌 잠금 → 누적 상태 기록 INSERT (출처: 통보) → COMMIT
 주기 조회      → 계좌 잠금 → KIS 누계가 마지막 기록과 다르면 누적 상태 기록 INSERT (출처: 조회) → COMMIT
-주문이 끝남    → (리스너) 최종 누적값으로 금액 원장 1건 + 보유 갱신 + 묶음 해제 → COMMIT
+주문이 끝남    → KIS 조회로 누계 확인 → OrderFinished 발행
+             → (리스너) 계좌 잠금 → 끝난 시각 순으로 금액 원장 유형별 1행 + 보유 갱신 + 묶음 해제 → COMMIT
 ```
 
 | 장치 (제안) | 막는 것 |
 |---|---|
-| 누적 상태 기록은 별도 빈의 `@Transactional(propagation = REQUIRES_NEW)`로 먼저 커밋 | 뒤 처리의 실패로 기록까지 사라지는 것. PostgreSQL에는 자율 트랜잭션이 없어서, 같은 트랜잭션 안의 행은 롤백되면 반드시 사라진다 |
+| 누적 상태 기록은 별도 빈의 `@Transactional(propagation = REQUIRES_NEW)`로 먼저 커밋. 계좌 잠금과 `INSERT`는 이 트랜잭션 **안에서만** 한다 | 뒤 처리의 실패로 기록까지 사라지는 것(PostgreSQL에는 자율 트랜잭션이 없어 같은 트랜잭션 안의 행은 롤백되면 사라진다). 바깥 트랜잭션이 계좌를 잠근 채 이 트랜잭션을 부르면, 두 연결이 서로를 기다리는데 PostgreSQL은 이를 교착으로 잡지 못한다 |
 | 각 기록에 출처(통보 / 조회). 조회값이 정답. 조회 누계가 통보로 쌓은 누계보다 작으면 알림 | 통보 중복으로 우리 누계가 부풀어도 조회로 바로잡는다 |
-| 조회 기록은 `UNIQUE(주문, 누적 수량, 출처)` 등으로 같은 누계를 두 번 넣지 않음 | 같은 조회 결과의 중복 저장 |
+| 조회 기록은 `UNIQUE(주문, 상태, 누적 수량, 출처)`로 같은 결과를 두 번 넣지 않음 | 같은 조회 결과의 중복 저장. 상태를 키에 넣어, 누계는 같고 상태만 바뀐 경우(부분 체결 → 잔량 취소)는 기록된다 |
 | 주문·기록 저장 때 계좌 행 잠금(`SELECT … FOR UPDATE`). 잠금은 별도 문장으로 먼저 걸고, 조회·저장은 그다음 문장에서 | 동시 주문으로 돈을 두 번 쓰는 것, 기록 id 순서와 커밋 순서가 어긋나는 것 |
-| 금액 원장 `UNIQUE(type, ref_id)`, `ref_id` = 주문 | 끝난 주문이 두 번 반영되는 것 |
-| 금액 원장에는 성공한 돈의 움직임만. 반영 실패는 주문의 원장 반영 상태에 원인과 함께 기록하고, 그 계좌의 반영을 멈추고 알림 | 잔고 합계에 실패 기록이 섞이는 것, 실패를 건너뛰고 계속 가는 것 |
-| 삭제 금지: `BEFORE DELETE`(행)·`BEFORE TRUNCATE`(문장) 트리거, 앱 계정에는 `SELECT`·`INSERT`와 필요한 상태 칼럼 `UPDATE`만, Flyway 계정과 앱 계정 분리 | 기록 변조와 삭제. 트리거는 테이블 소유자도 막고, 권한은 소유자에게 안 먹히므로 계정을 나눈다 |
+| 금액 원장 `UNIQUE(type, ref_id)`, `ref_id` = 주문 (`ADJUST`는 예외) | 끝난 주문이 두 번 반영되는 것 |
+| 금액 원장에는 성공한 돈의 움직임만. 반영 실패는 주문의 원장 반영 상태(`orders.ledger_status`, `ledger_error`)에 원인과 함께 기록하고, 그 계좌의 반영을 멈추고 알림 | 잔고 합계에 실패 기록이 섞이는 것, 실패를 건너뛰고 계속 가는 것 |
+| 삭제 금지: `BEFORE DELETE`(행)·`BEFORE TRUNCATE`(문장) 트리거, 앱 계정에는 `SELECT`·`INSERT`와 필요한 상태 칼럼 `UPDATE`만, Flyway 계정과 앱 계정 분리 | 앱 계정으로 하는 기록 변조와 삭제. 트리거는 테이블 소유자도 막지만 소유자는 트리거를 지울 수 있고, 권한은 소유자에게 안 먹히므로 계정을 나눈다 |
 | 장 마감 뒤 대사(KIS 주문별 누계·잔고 ↔ 우리 기록) | 저장 자체가 안 된 주문, 실현 손익 차이 |
 
-- 묶을 금액: 지정가 매수는 지정가 × 수량. 시장가 매수는 체결가를 미리 모르므로 KIS의 주문 가능 금액 계산 방식을 확인한 뒤 정한다(8장).
+- 묶을 금액: 지정가 매수는 지정가 × 수량 + 예상 수수료. 매도 가능 수량에는 진행 중인 매수 주문의 누적 체결 수량을 더한다(당일 산 주식도 팔 수 있다). 시장가 매수는 체결가를 미리 모르므로 KIS의 주문 가능 금액 계산 방식을 확인한 뒤 정한다(8장).
 - 확인한 PostgreSQL 동작
   - id는 `INSERT` 때 시퀀스에서 받고, 다른 트랜잭션에는 `COMMIT` 뒤에 보인다. 잠금 없이 "마지막으로 본 id 이후"를 읽으면 늦게 커밋된 작은 id를 건너뛴다.
   - 시퀀스 번호는 되돌아가지 않는다. 롤백뿐 아니라 `ON CONFLICT DO NOTHING`으로 건너뛴 `INSERT`도 번호를 쓴다(넣을 행을 기본값 `nextval`까지 채운 뒤에 고유 키를 검사한다). 결번은 정상 운영 중에도 생기며, 어떤 처리도 결번에 기대지 않는다.
@@ -308,12 +317,12 @@ KIS가 주는 정보 ([open-trading-api](https://github.com/koreainvestment/open
 | `broker_accounts` | id, user_id, broker(`KIS`), environment(`PAPER`/`LIVE`), account_no_enc, app_key_enc, app_secret_enc, expires_on(모의) |
 | `instruments` | code, name, market(KOSPI/KOSDAQ), tick_size_rule, nxt_eligible |
 | `market_sessions` | venue(KRX/NXT), session, opens_at, closes_at, order_types |
-| `orders` | id, client_order_id(UK), account_id, instrument, side, type, venue(KRX/NXT/SOR), price, quantity, status, external_id(KIS 주문번호), strategy_run_id(nullable), version |
+| `orders` | id, client_order_id(UK), account_id, instrument, side, type, venue(KRX/NXT/SOR), price, quantity, status, external_id(KIS 주문번호), finished_at, ledger_status(대기/반영/실패), ledger_error, strategy_run_id(nullable), version |
 | `order_events` | id, order_id, from_status, to_status, reason, occurred_at |
 | `executions` | 주문의 누적 상태 기록(4.6). id, account_id, order_id, event(접수/정정/취소/거부/체결/동기화), source(통보/조회), status, filled_qty(누적), filled_amount(누적), last_fill_qty·last_fill_price(통보일 때), fee·tax(추정), occurred_at, recorded_at. 추가만 함 |
 | `order_holds` | 진행 중 주문의 묶음. order_id, account_id, 금액 또는 수량. 주문이 끝나면 해제 (4.6, 제안) |
 | `positions` | account_id, instrument, quantity, avg_price, version. 끝난 주문으로 갱신 |
-| `cash_ledger` | id, account_id, amount, type(`DEPOSIT`/`BUY`/`SELL`/`FEE`/`TAX`/`ADJUST`), ref_id(끝난 주문 등), occurred_at. `UNIQUE(type, ref_id)` |
+| `cash_ledger` | id, account_id, amount, type(`DEPOSIT`/`BUY`/`SELL`/`FEE`/`TAX`/`ADJUST`), ref_id(끝난 주문 등), occurred_at. 끝난 주문은 유형별 1행, `UNIQUE(type, ref_id)`(`ADJUST` 제외) |
 | `strategies` / `strategy_runs` / `signals` | 전략 정의·파라미터, 실행 기록, 신호 |
 | 전략 운영 테이블 | `position_plans`, `plan_tranches`, `decisions`, `news_articles` 등 — [strategy.md](strategy.md) 18장 |
 | `risk_limits` | account_id, 규칙별 한도, kill_switch |
@@ -359,6 +368,7 @@ KIS가 주는 정보 ([open-trading-api](https://github.com/koreainvestment/open
 - [ ] 일별주문체결조회 `output1.tot_ccld_amt`가 주문의 총 체결 금액인지. 예제의 `output2` 필드 설명은 한 칸씩 밀려 보인다
 - [ ] 수수료·세금 확정 값을 어느 API에서 받는지(조회는 추정치 `prsm_tlex_smtl`)
 - [ ] 정정 주문의 체결이 새 주문번호와 원주문번호 중 어느 것으로 오는지
+- [ ] 장 마감으로 소멸한 미체결 잔량을 KIS가 통보하는지(4.6 "끝난 주문" 판정)
 - [ ] 시장가 매수의 주문 가능 금액을 KIS가 어떻게 계산하는지(묶을 금액의 기준), 매도 대금을 언제부터 주문에 쓸 수 있는지(결제 시점)
 - [ ] 모의투자의 수수료·세금 계산 방식 (0.0142% / 0.20%로 알려짐)
 - [ ] 모의투자 체결 규칙 실측: 현재가보다 유리한 지정가가 즉시 체결되는지, 실제 체결량만큼만 체결되는지, 부분 체결과 체결통보가 오는지, 시간외 주문이 거부되는지

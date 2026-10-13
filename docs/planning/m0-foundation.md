@@ -1,7 +1,7 @@
 # M0 설계: Claude·빌드 기반
 
 - 작성일: 2026-10-13
-- 상태: 초안 (B-01 진행 중. 작업지시서 "정할 것" 1~4번 결정, 5~8번 남음)
+- 상태: 초안 (B-01 진행 중. 작업지시서 "정할 것" 1~7번 결정, 8번과 7번의 머지 방식 남음)
 - 관계: [plan.md](plan.md) 2장(스택)·4장(아키텍처)·7장 M0의 상세. 관련 문서: [work-orders.md](work-orders.md) B-01
 
 ## 결론
@@ -21,6 +21,16 @@ M0 스택을 실험 프로젝트로 직접 돌려 확인했다. Boot 4.1.1, Kotl
 | 시계열 영속성 | 읽기·쓰기 모두 SQL. 조회는 `JdbcClient`, 일괄 삽입은 `NamedParameterJdbcTemplate` | Spring 7.0.9의 `JdbcClient`에는 배치가 없다. JPA 쓰기·Exposed·jOOQ는 쓰지 않는다(아래 실험) |
 | 기능 사이 의존 | 다른 기능은 두 곳에서만 참조한다. ① `adapter/out`: 부르는 쪽 포트를 구현하며 상대의 `application/service` 호출 ② `adapter/in/messaging` 리스너: 상대의 `domain/event` 수신. 기능 간 순환 금지. 반대 방향은 이벤트로 | 업무 코드가 다른 기능의 내부를 모르고, 분리할 때 어댑터만 바뀐다 |
 | 구조 검사 도구 | ArchUnit 직접 작성 (계층 규칙 + 기능 사이 규칙 + 순환 금지) | Modulith `verify()`는 서비스가 다른 기능의 서비스를 직접 import해도 통과시켰고, 공개 클래스마다 `@NamedInterface` 표시가 필요하다 |
+| PIT 대상과 기준 | `domain`과 `application/service`만. 점수 기준선(`mutationThreshold`)은 걸지 않고 보고만 한다 (2026-10-10 log.md 결정을 2026-10-13 재확인) | `adapter`는 통합 테스트로 확인하고 뮤턴트마다 컨테이너를 띄우면 너무 느리다. 바뀐 클래스만 돌리면 뮤턴트 수가 적어 비율이 크게 흔들린다 |
+| 살아남은 뮤턴트 처리 | 4분류: ① 테스트 부족 → 테스트 추가 ② 동등 뮤턴트 → 이유 기록 ③ 쓸모없는 코드 → 사용자 확인 후 삭제 ④ 보류 → 이유 기록. 작업을 마칠 때 미분류 0개. ②④의 이유는 커밋 메시지 본문에 | 별도 파일로 관리하면 코드가 바뀔 때 어긋난다 |
+| Docker Compose | TimescaleDB `timescale/timescaledb:2.26.1-pg18`만. 이름 있는 볼륨, 포트는 `127.0.0.1:5432`. `spring-boot-docker-compose`로 `bootRun` 때 자동 실행, 테스트는 Testcontainers | 로컬 단독 사용 |
+| Ollama (jev) | Compose에 넣지 않고 Mac에서 직접 실행 | Mac의 Docker 컨테이너는 Apple GPU를 쓰지 못한다고 알려져 있다(**검증하지 않음**) |
+| Flyway 초기 범위 | V1은 TimescaleDB 확장만. 테이블은 그 기능의 마일스톤에서(인증 M1, 주문·이벤트 기록 M3) | |
+| DB 계정 | M0부터 Flyway(소유자) 계정과 앱 계정을 나눈다. Compose의 DB 초기화 스크립트로 만든다 | plan.md 4.6의 삭제 금지 장치. 테이블이 없는 지금이 가장 쉽다 |
+| 코드 브랜치 | `<종류>/M<번호>-<slug>`(예: `feat/M1-auth`). 종류는 커밋 접두어와 같다. B-18(이슈 이전) 뒤에는 `<종류>/<이슈 번호>-<slug>` | |
+| 코드 브랜치와 기획 문서 | 코드 브랜치에서는 `docs/planning/`을 고치지 않는다. 설계를 바꿔야 하면 기획 브랜치를 따로 연다. CLAUDE.md "코드 작업" 절만 코드 브랜치에서 `chore:`로 고친다 | 기획과 코드 커밋을 섞지 않는다(CLAUDE.md Git) |
+| 커밋과 이슈 | 커밋 본문 끝에 `Refs: #<이슈 번호>` trailer. 이슈는 PR 본문의 `Closes #<번호>`로 닫는다(커밋에는 쓰지 않는다) | 커밋에서 작업 기록(이슈)으로 바로 간다. 커밋의 `Closes`는 중간 커밋이 `main`에 들어갈 때 이슈를 닫아 버린다 |
+| 합치기 조건 | `./gradlew test`(ArchUnit 포함) 통과, 바뀐 클래스의 살아남은 뮤턴트 미분류 0, pre-commit 훅 통과. PR로 합친다 | |
 | 모듈 간 이벤트 | Postgres Outbox 대신 **Spring Modulith 이벤트 발행 기록** (`spring-modulith-starter-jdbc`, PostgreSQL) | 같은 트랜잭션에 기록, 롤백이면 기록 없음, 리스너 실패 시 미완료로 남아 재전송 가능(실험). Outbox·릴레이·재전송을 직접 만들 필요가 없다 |
 
 ## 상세
@@ -76,8 +86,11 @@ pitest {
 }
 ```
 
-- **제안:** 테스트 파일만 바뀌면 `FooTest` → 같은 패키지의 `Foo`를 대상에 넣는다. 비교 기준은 커밋하지 않은 변경 + `git diff main...HEAD`. 바뀐 클래스가 없으면 PIT를 건너뛰고 성공으로 끝낸다.
-- 대상 패키지와 살아남은 뮤턴트 처리 규칙은 아직 정하지 않았다(작업지시서 5번).
+- `pitestChanged` 태스크(plan.md 7장 M0 완료 기준): 아래를 계산해 `-PpitTargets`로 `pitest`를 부르는 Gradle 태스크다. 결정(2026-10-13).
+  - 비교 기준: 커밋하지 않은 변경 + `git diff main...HEAD`
+  - 대상: 바뀐 main `.kt` 중 `domain`·`application/service` 패키지의 클래스. 테스트 파일만 바뀌면 `FooTest` → 같은 패키지의 `Foo`
+  - 바뀐 클래스가 없으면 PIT를 건너뛰고 성공으로 끝낸다
+- 위 블록의 기본값 `com.loading1031.stock.*`는 `pitest`를 직접 부를 때만 쓴다.
 
 ### 시각·소수·비밀값 규칙
 
@@ -101,8 +114,8 @@ risk/application/service/RiskCheckService ──사용──→ risk/application
 risk/adapter/out/portfolio/HoldingsAdapter ──구현──→ LoadHoldingsPort
                                             ──호출──→ portfolio/application/service/HoldingsQueryService
 
-order/application/service/OrderService ──발행──→ order/domain/event/OrderFilled
-portfolio/adapter/in/messaging/OrderFilledListener ──수신──→ OrderFilled
+order/application/service/OrderService ──발행──→ order/domain/event/OrderFinished
+portfolio/adapter/in/messaging/OrderFinishedListener ──수신──→ OrderFinished
 ```
 
 ArchUnit으로 검사할 것:
@@ -113,28 +126,27 @@ ArchUnit으로 검사할 것:
 ### 모듈 간 이벤트: Modulith 이벤트 발행 기록
 
 - 이벤트 기록은 업무 트랜잭션 안에서 쓴다. 리스너(`@ApplicationModuleListener` = 비동기 + 새 트랜잭션 + 커밋 후)는 따로 돈다.
-- 리스너가 비동기라 처리 순서는 보장되지 않는다. 그래서 **리스너는 이벤트를 "새 체결이 있다"는 신호로만 쓰고**, 계좌를 잠근 뒤 아직 반영하지 않은 체결을 id 순으로 반영한다(plan.md 4.6 제안).
+- 리스너가 비동기라 처리 순서는 보장되지 않는다. 그래서 **리스너는 이벤트를 "끝난 주문이 있다"는 신호로만 쓰고**, 계좌를 잠근 뒤 아직 반영하지 않은 끝난 주문을 끝난 시각 순으로 반영한다(plan.md 4.6).
 - **제안:** 이벤트 기록 테이블 DDL은 Flyway 마이그레이션에 넣고 자동 생성(`spring.modulith.events.jdbc.schema-initialization.enabled`)은 끈다. 완료 기록 정리(`completion-mode`)와 재전송 방식(재시작 시 / 주기 작업)은 M3에서 정한다.
 - 나중에 Kafka로 내보낼 때는 `@Externalized`를 쓴다(plan.md 6장 "Kafka 도입 조건"과 같은 경로).
 
 ## 데이터 모델 영향
 
 - `outbox` 테이블 → Modulith 이벤트 기록 테이블(`event_publication`)로 바뀐다.
+- 주문·체결 정합성에 따른 변경(`executions` 누적 상태, `order_holds`, `orders.ledger_status`, 끝난 주문 단위 `cash_ledger`)은 plan.md 4.6·5장.
 - 테이블 이름 규칙(기능 접두어, `cash_tx`)과 잔고 구조는 [backlog.md](backlog.md) B-17에서 정한다.
 
 ## 다른 문서에 반영할 곳
 
-- plan.md 2장: Hibernate 7.4, 영속성 줄
-- plan.md 4.2·4.3·4.6, 5장 `outbox`, 7장 M0·M3
-- CLAUDE.md 결정된 사항: 구조, 영속성, 모듈 간 소통
-- 시각화 문서 "아키텍처"·"데이터 모델": 동기화 빚
+- 반영함: plan.md 2장·3.4·3.5·3.7·4.2·4.3·4.5·4.6·5장·7장·8장, CLAUDE.md 결정된 사항·Git·플러그인
+- 남음: 시각화 문서 "아키텍처"·"데이터 모델"·"주문·체결 흐름" (backlog.md 동기화 빚)
 
 ## 확인이 필요한 것
 
-- [ ] 작업지시서 5번 나머지: PIT 대상 패키지, 살아남은 뮤턴트 처리 규칙
-- [ ] 작업지시서 6번: Docker Compose 구성, Flyway 초기 마이그레이션 범위
-- [ ] 작업지시서 7번: 코드 브랜치 규칙
-- [ ] 작업지시서 8번: 컨텍스트 로딩 테스트와 샘플 도메인 클래스
+- [ ] 작업지시서 7번 나머지: `main`에 합치는 방식(`--no-ff` 머지 커밋 유지 / 일렬로 합치기)
+- [ ] 작업지시서 8번: 컨텍스트 로딩 테스트와 샘플 도메인 클래스, ArchUnit 테스트의 첫 모양
+- [ ] M0 구현 체크리스트(만들 파일, 실행할 명령, 확인 방법)
+- [ ] Mac Docker에서 Ollama가 GPU를 못 쓰는지
 - [ ] Gradle 경고 `Configuration.setVisible` 사용 중단(Gradle 11에서 제거)이 어느 플러그인에서 나오는지
 - [ ] Modulith 리스너를 동기(`@TransactionalEventListener`만)로 두면 처리 순서가 지켜지는지 (시험하지 않음)
 - [ ] Boot 4.2(Spring 7.1) 정식 출시 후 `JdbcClient` 배치 API로 일괄 삽입을 옮길지. 7.1 RC1에서 API가 바뀐다(spring-framework #37341)

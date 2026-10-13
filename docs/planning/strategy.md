@@ -349,7 +349,7 @@ PLANNED → ACCUMULATING → HOLDING → EXITING → CLOSED
 
 ## 15. 모의투자의 제약과 대응
 
-2차 자료 기준이며 M0에서 실측한다.
+2차 자료 기준이며 B-02(KIS API 검증)에서 실측한다.
 
 | 제약 | 대응 |
 |---|---|

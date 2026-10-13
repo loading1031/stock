@@ -20,11 +20,12 @@
 
 | 순서 | ID | 세션 | 사용자 준비물 |
 |---|---|---|---|
-| 1 | B-01 (진행 중) | M0 설계 남은 4개 질문 | 없음. JDK 25는 Gradle 툴체인이 받으므로 설치 불필요. Docker Desktop 실행 |
-| 2 | B-03 | 프론트엔드 기술과 화면 | 없음 |
-| 3 | B-02 | KIS API 검증 | **KIS 모의투자 신청 + KIS Developers 모의 앱키 발급** |
-| 아무 때나 | B-13, B-14 | 플러그인 저장소 정리 (claude-plugins 저장소에서) | GitHub 저장소 이름·공개 범위 결정 |
-| 아무 때나 | 동기화 | 시각화 문서 동기화 빚 5건 해소 | 없음 |
+| 1 | B-01 (진행 중, 이슈 #2) | 8번과 머지 방식, M0 구현 체크리스트, 합치기 | 없음. Docker Desktop 실행 |
+| 2 | B-18 | 기획 관리를 GitHub 이슈로 (B-01을 `main`에 합친 뒤 시작) | 없음 |
+| 3 | B-03 | 프론트엔드 기술과 화면 | 없음 |
+| 4 | B-02 | KIS API 검증 | **KIS 모의투자 신청 + KIS Developers 모의 앱키 발급** |
+| 아무 때나 | B-14 | kopring 원본 정리 (claude-plugins 저장소에서) | A/B 선택 |
+| 아무 때나 | 동기화 | 시각화 문서 동기화 빚 6건 해소 | 없음 |
 
 B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03을 먼저 닫는다. 모의투자 신청은 미리 해 두면 좋다(신청 후 3개월 미접속 해지 주의).
 
@@ -32,7 +33,7 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 
 ## B-01 M0 설계: Claude·빌드 기반
 
-- 브랜치: `plan/B-01-m0-foundation` (진행 중, 커밋 4개)
+- 브랜치: `plan/B-01-m0-foundation` (진행 중). 이슈 [#2](https://github.com/loading1031/stock/issues/2)
 - 목표: M0 구현 세션이 **이 설계 문서만 보고** 프로젝트 골격을 만들 수 있게 한다.
 - 산출물: `docs/planning/m0-foundation.md`(있음, 초안) 완성, CLAUDE.md "코드 작업" 절 초안
 
@@ -46,9 +47,7 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 - 주문·체결 정합성(B-01 범위 밖이지만 이번에 정함): plan.md 4.6
 
 ### 정할 것 (사용자에게 물을 질문)
-5. PIT 나머지: 대상 패키지(`domain`만? `application`까지?), 살아남은 뮤턴트를 Claude가 처리하는 규칙(4분류: 테스트 추가 / 동등 뮤턴트 / 의미 없는 코드 삭제 / 보류), m0-foundation.md의 PIT 제안 3개(테스트만 바뀐 경우, 비교 기준, 대상 없음) 확정
-6. Docker Compose 구성(TimescaleDB `2.26.1-pg18` 고정, 볼륨, 포트)과 Flyway 초기 마이그레이션 범위(빈 스키마 / Modulith `event_publication` / 인증 테이블까지). Flyway 계정과 앱 계정 분리(plan.md 4.6 제안)를 M0에서 할지
-7. 코드 브랜치 규칙(예: `feat/M1-auth`)과 기획 브랜치와의 관계
+7. (나머지) `main`에 합치는 방식: `--no-ff` 머지 커밋 유지(추천: 작업 단위를 통째로 되돌리기 쉬움) / 일렬로 합치기(이력은 PR·이슈와 커밋의 `Refs:`로 추적)
 8. 컨텍스트 로딩 테스트와 샘플 도메인 클래스(PIT 동작 확인용). ArchUnit 테스트의 첫 모양
 
 ### 조사할 것
@@ -56,17 +55,17 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 - 실험 프로젝트 `/tmp/stock-spike`가 남아 있으면 참고. 사라졌으면 m0-foundation.md만 본다
 
 ### 완료 기준
-- 5~8번에 결정 또는 "제안 + 확인 필요"가 m0-foundation.md에 있다
+- 7번 머지 방식과 8번에 결정 또는 "제안 + 확인 필요"가 m0-foundation.md에 있다
 - M0 구현 체크리스트(만들 파일 목록, 실행할 명령, 확인 방법)가 m0-foundation.md에 있다
 - CLAUDE.md "코드 작업" 절 초안이 있다
 - 새로 생긴 주제는 백로그 후보로 옮겼다
 
 ### 진행 메모
 2026-10-13
-- 문서에 반영함: m0-foundation.md, plan.md 2·4.2·4.3·4.5·4.6·5·7·8장, CLAUDE.md 결정된 사항, log.md, backlog.md(B-15·B-16·B-17 추가, B-02·B-10 보완, 동기화 빚 1건)
-- 플러그인: kopring 0.2.0 커밋 `56c54ed` (claude-plugins 저장소)
-- 아직 문서에 안 쓴 결정: 없음
-- 다음 첫 행동: 5번(PIT 대상 패키지와 살아남은 뮤턴트 처리 규칙)을 묻는다
+- 1~7번(7번은 머지 방식 빼고) 결정, 문서에 반영함: m0-foundation.md "결정 사항", plan.md, CLAUDE.md, log.md
+- 주문·체결 정합성(plan.md 4.6)도 이번에 정했고, 서브에이전트 정합성 검토 결과를 반영함
+- 플러그인: kopring 0.2.0(`56c54ed`), 마켓플레이스는 GitHub 소스
+- 다음 첫 행동: 7번 머지 방식을 묻고, 8번으로. 끝나면 M0 구현 체크리스트를 쓰고 `/planning:done`. `main`이 다른 폴더(`/Users/seongmun/Documents/stock`)에 열려 있으므로 합치기는 그 폴더에서 한다. 합친 뒤 이슈 #2 본문의 링크를 `main`으로 바꾼다
 
 ---
 
@@ -151,17 +150,6 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 
 ---
 
-## B-13 마켓플레이스 GitHub 업로드
-
-- 작업 위치: `~/Documents/claude-plugins` 저장소 (stock이 아님. 기획 브랜치 대신 그 저장소의 `chore:` 작업)
-- 선행 (사용자): 저장소 이름(제안: `claude-plugins`), 공개 범위(private 권장) 결정
-- 할 일
-  1. `gh repo create loading1031/<이름> --private --source ~/Documents/claude-plugins --push` (외부 업로드라 실행 전 확인)
-  2. 마켓플레이스를 GitHub 소스로 다시 등록: `claude plugin marketplace remove loading1031-plugins` → `claude plugin marketplace add loading1031/<이름>`
-  3. stock에서 `claude plugin list`로 두 플러그인이 다시 enabled인지 확인
-  4. stock `CLAUDE.md` "플러그인" 절의 마켓플레이스 위치 갱신, backlog B-13 완료
-- 완료 기준: 다른 디렉터리에서 GitHub 소스로 설치가 된다
-
 ## B-14 kopring 원본 정리
 
 - 작업 위치: `~/Documents/claude-plugins`, kopring-conventions 저장소
@@ -169,7 +157,7 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-01·B-03�
 - 선택지 (사용자 결정)
   - A. kopring-conventions 저장소 자체를 플러그인 구조로 바꾸고, 마켓플레이스는 `github` 소스로 그 저장소를 참조
   - B. 플러그인을 원본으로 삼고, kopring-conventions에는 문서와 예시(`examples/`)만 남기며 README에 플러그인 설치 안내
-- 선행: B-13
+- 선행: B-13 (2026-10-13 완료. 마켓플레이스는 GitHub `loading1031/claude-plugins`)
 - 완료 기준: 규칙 원본이 한 곳이고, 다른 곳은 그것을 가리킨다
 
 ## 동기화 세션 (선택)
