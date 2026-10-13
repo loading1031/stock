@@ -249,18 +249,45 @@ com.<base>
    → (커밋 후) 리스너 → PortfolioService(원장·보유 갱신), 알림, 전략 상태
 ```
 
-**주문·체결 흐름의 정합성 (제안, 2026-10-13)** — 실험 프로젝트에서 PostgreSQL 동작을 재현해 확인한 것을 바탕으로 했다.
+**주문·체결 흐름의 정합성 (2026-10-13)** — 실험 프로젝트에서 PostgreSQL 동작을 재현해 확인한 것을 바탕으로 했다.
 
-| 장치 | 막는 것 |
+결정:
+- 거래 행(체결 기록)은 **처리와 상관없이 먼저 저장하고 커밋**한다. 뒤의 처리가 롤백돼도 거래 행은 남는다.
+- 금액 원장 리스너는 이벤트 하나에 대응하지 않고, 매번 **원장에 반영되지 않은 거래 행 전부**를 처리한다. 거래 행 id의 결번은 신경 쓰지 않는다(금액 원장의 책임이 아니다).
+- 거래 행은 절대 삭제할 수 없게 보장한다.
+- 외부 시스템이 붙인 식별자 칼럼은 모두 `external_id`로 부른다. 그 값을 멱등키(`UNIQUE`)로 쓸지는 테이블마다 정한다.
+
+처리 흐름 (제안):
+
+```
+① 수신  (짧은 트랜잭션, 먼저 커밋)
+   계좌 잠금 → 거래 행 INSERT (external_id가 이미 있으면 건너뜀) → COMMIT
+② 주문 처리  (별도 트랜잭션)
+   주문 상태 갱신 등. 실패하면 롤백 뒤 별도 트랜잭션으로 거래 행의 처리 상태에 실패와 원인 기록
+③ 금액 원장 반영  (리스너, 별도 트랜잭션)
+   계좌 잠금 → 원장 반영 상태가 대기인 거래 행을 id 순으로 → 금액 원장 행 생성 + 반영 표시 → COMMIT
+   실패하면 롤백(금액 원장 행도 같이 사라짐) 뒤 별도 트랜잭션으로 원장 반영 상태에 실패와 원인 기록
+```
+
+| 장치 (제안) | 막는 것 |
 |---|---|
-| 주문과 체결 저장 때 계좌 행 잠금(`SELECT … FOR UPDATE`). 잠금은 별도 문장으로 먼저 걸고, 조회·저장은 그다음 문장에서 | 동시 주문으로 돈을 두 번 쓰는 것. 같은 계좌의 체결 id 순서와 커밋 순서가 어긋나는 것 |
-| 증권사 체결 ID `UNIQUE` + `ON CONFLICT DO NOTHING` | 실시간 통보와 주기 조회로 같은 체결이 두 번 저장되는 것 |
-| 리스너는 이벤트를 신호로만 쓰고, 계좌를 잠근 뒤 아직 반영하지 않은 체결을 id 순으로 반영. 반영 여부는 현금 원장의 `ref_id`로 판별 | 리스너 비동기 실행으로 반영 순서가 바뀌는 것(매도 실현 손익이 달라짐), 중복 반영 |
-| 체결 기록은 추가만 한다(앱 계정의 `UPDATE`·`DELETE` 권한 제거 또는 트리거) | 기록 변조, 지워져서 생기는 누락 |
-| 대사(KIS 체결 내역 ↔ 우리 기록) | 저장 자체가 안 된 체결 |
+| ①은 별도 빈의 `@Transactional(propagation = REQUIRES_NEW)`로 먼저 커밋 | 처리 실패로 거래 기록까지 사라지는 것. PostgreSQL에는 자율 트랜잭션이 없어서, 같은 트랜잭션 안의 행은 롤백되면 반드시 사라진다 |
+| 주문과 거래 행 저장 때 계좌 행 잠금(`SELECT … FOR UPDATE`). 잠금은 별도 문장으로 먼저 걸고, 조회·저장은 그다음 문장에서 | 동시 주문으로 돈을 두 번 쓰는 것. 같은 계좌의 거래 행 id 순서와 커밋 순서가 어긋나는 것 |
+| 거래 행의 `external_id`(KIS 체결번호) `UNIQUE` + `ON CONFLICT DO NOTHING` | 실시간 통보와 주기 조회로 같은 체결이 두 번 저장되는 것 |
+| 거래 행에 상태 두 개: 처리 상태(주문 반영), 원장 반영 상태. 각각 실패 원인과 시도 횟수 | 처리 실패와 원장 실패를 섞는 것. 거래는 실제로 일어났으므로, 주문 처리가 실패해도 금액 원장은 반영돼야 한다 |
+| 금액 원장에는 성공한 돈의 움직임만 둔다. 실패는 거래 행의 상태에 기록 | 잔고 합계에 실패 기록이 섞이는 것 |
+| 원장 반영이 실패한 거래가 있으면 그 계좌의 반영을 멈추고 알림 | 실패를 건너뛰고 뒤 거래를 반영해 순서와 잔고가 틀어진 채 계속 가는 것 |
+| 삭제 금지: `BEFORE DELETE`(행)·`BEFORE TRUNCATE`(문장) 트리거, 앱 계정에는 `SELECT`·`INSERT`와 상태 칼럼 `UPDATE`만, Flyway 계정과 앱 계정 분리 | 기록 변조와 삭제. 트리거는 테이블 소유자도 막고, 권한은 소유자에게 안 먹히므로 계정을 나눈다 |
+| 대사(KIS 체결 내역 ↔ 거래 원장) | 저장 자체가 안 된 체결 |
 
-- 확인한 PostgreSQL 동작: id는 `INSERT` 때 시퀀스에서 받고 다른 트랜잭션에는 `COMMIT` 뒤에 보인다. 그래서 잠금 없이 "마지막으로 본 id 이후"를 읽으면 늦게 커밋된 작은 id를 건너뛴다. `INSERT`는 같은 고유 키를 넣을 때만 서로 기다린다. 잠금을 거는 문장 안의 다른 테이블 조회는 기다리기 전 스냅샷을 쓴다.
-- 체결 기록(order), 현금 원장(portfolio), 보유 상태(portfolio)는 다른 테이블이다. 테이블 이름 규칙과 잔고 구조는 [backlog.md](backlog.md) B-17.
+- 확인한 PostgreSQL 동작
+  - id는 `INSERT` 때 시퀀스에서 받고, 다른 트랜잭션에는 `COMMIT` 뒤에 보인다. 잠금 없이 "마지막으로 본 id 이후"를 읽으면 늦게 커밋된 작은 id를 건너뛴다.
+  - 시퀀스 번호는 되돌아가지 않는다. 롤백뿐 아니라 `ON CONFLICT DO NOTHING`으로 건너뛴 `INSERT`도 번호를 쓴다. 넣을 행을 기본값(`nextval`)까지 채워 만든 뒤에 고유 키를 검사하기 때문이다. 그래서 결번은 정상 운영 중에도 생긴다.
+  - `INSERT`는 같은 고유 키를 넣을 때만 서로 기다린다. 다른 행이면 기다리지 않는다.
+  - 잠금을 거는 문장 안에서 다른 테이블을 조회하면, 기다리기 전 스냅샷을 쓴다.
+  - 칼럼 단위 `UPDATE` 권한과 `DELETE`·`TRUNCATE` 트리거가 동작한다.
+- 열린 질문: 원장 순서를 **기록 순서**로 볼지 **실제 체결 순서**(KIS 체결 시각)로 볼지. 통보가 누락돼 주기 조회로 늦게 기록된 체결은 기록 순서가 실제 순서와 다르다. 현금 합계·보유 수량은 순서와 무관하지만, 매도 실현 손익은 달라질 수 있다. plan.md 3.5 "증권사 체결 내역의 값을 우선한다"에 따라 기록 순서 + 대사 보정이 후보.
+- 거래 원장(order), 금액 원장(portfolio), 보유 상태(portfolio)는 다른 테이블이다. 테이블 이름은 [backlog.md](backlog.md) B-17.
 
 ## 5. 데이터 모델 초안
 
@@ -271,9 +298,9 @@ com.<base>
 | `broker_accounts` | id, user_id, broker(`KIS`), environment(`PAPER`/`LIVE`), account_no_enc, app_key_enc, app_secret_enc, expires_on(모의) |
 | `instruments` | code, name, market(KOSPI/KOSDAQ), tick_size_rule, nxt_eligible |
 | `market_sessions` | venue(KRX/NXT), session, opens_at, closes_at, order_types |
-| `orders` | id, client_order_id(UK), account_id, instrument, side, type, venue(KRX/NXT/SOR), price, quantity, status, broker_order_no, strategy_run_id(nullable), version |
+| `orders` | id, client_order_id(UK), account_id, instrument, side, type, venue(KRX/NXT/SOR), price, quantity, status, external_id(KIS 주문번호), strategy_run_id(nullable), version |
 | `order_events` | id, order_id, from_status, to_status, reason, occurred_at |
-| `executions` | id, broker_execution_id(UK), order_id, price, quantity, fee, tax, executed_at |
+| `executions` | id, account_id, external_id(KIS 체결번호, UK), order_id, price, quantity, fee, tax, executed_at, 처리 상태, 원장 반영 상태 (4.6) |
 | `positions` | account_id, instrument, quantity, avg_price, version |
 | `cash_ledger` | id, account_id, amount, type(`DEPOSIT`/`BUY`/`SELL`/`FEE`/`TAX`/`ADJUST`), ref_id, occurred_at |
 | `strategies` / `strategy_runs` / `signals` | 전략 정의·파라미터, 실행 기록, 신호 |
@@ -286,6 +313,7 @@ com.<base>
 | `futures_rolls` | series_id, from_contract, to_contract, rolled_at |
 
 - 금액·가격은 `numeric`(Kotlin `BigDecimal`)으로 저장하고, 도메인에서는 `Money`/`Price`/`Quantity` value class로 다룬다. `Double`을 쓰지 않는다.
+- 외부 시스템이 붙인 식별자는 `external_id`로 부른다. 멱등키로 쓸지는 테이블마다 정한다.
 - 시각은 `timestamptz`(UTC)로 저장하고, 장 시간 판단에만 `Asia/Seoul`을 쓴다. 현재 시각은 주입한 `Clock`에서 얻는다.
 - 스키마 마이그레이션은 Flyway로 한다.
 
@@ -315,6 +343,7 @@ com.<base>
 
 - [ ] KIS 모의투자 호출 한도(초당 2회로 알려짐), 토큰 유효 시간·발급 제한, 모의투자에서 쓸 수 없는 API 목록 — 공식 포털 문서로 확인
 - [ ] KIS 체결통보 WebSocket이 모의투자에서도 동작하는지
+- [ ] KIS가 체결마다 고유한 번호를 주는지, 어느 필드인지(주문번호 + 체결 순번 조합일 수 있음). 거래 원장 `external_id`의 멱등키 여부가 여기에 달렸다
 - [ ] 모의투자의 수수료·세금 계산 방식 (0.0142% / 0.20%로 알려짐)
 - [ ] 모의투자 체결 규칙 실측: 현재가보다 유리한 지정가가 즉시 체결되는지, 실제 체결량만큼만 체결되는지, 부분 체결과 체결통보가 오는지, 시간외 주문이 거부되는지
 - [ ] 모의투자 참가 기간 선택지, 재신청 시 계좌번호·API 키 변경 여부, 3개월 미접속 기준에 API 호출 포함 여부, KIS Developers 모의 API 키 유효기간
