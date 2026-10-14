@@ -11,6 +11,7 @@
 | `docs/planning/plan.md` | 전체 기획: 기능, 아키텍처, 데이터 모델, 마일스톤(M0~M7), 확인 필요 항목 |
 | `docs/planning/m0-foundation.md` | M0 설계: 실측 버전, 실험 결과, 빌드·구조·이벤트 결정 (B-01) |
 | `docs/planning/frontend.md` | 프론트엔드: Next.js BFF, 인증(Next 세션 + 서비스 키), SSE, 차트, 화면 목록, 자동 주문 끄기·미체결 주문 취소 (B-03) |
+| `.claude/rules/frontend.md` | 프론트엔드 프로젝트 전용 규칙(BFF, SSE, 차트, 주문 화면). `frontend/` 파일 작업 때만 적용. 범용 규칙은 `nextts` 플러그인 |
 | `docs/planning/strategy.md` | 운영 전략: 워크플로(Mermaid), jev 배치, 위험 예산, 포지션 계획, 매도, 교체 매매, 평가 |
 | `docs/planning/backlog.md` | 다음에 기획할 후보 목록 |
 | GitHub 이슈 (라벨 [`plan`](https://github.com/loading1031/stock/issues?q=label%3Aplan)) | **작업지시서**: 항목마다 이슈 하나(본문 = 지시서, 댓글 = 진행 메모). 다음 세션이 이전 대화 없이 시작하도록 쓴다. 번호는 backlog.md의 이슈 칸 |
