@@ -11,5 +11,12 @@
       },
       "autoUpdate": true
     }
+  },
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(!./.env.example)"
+    ]
   }
 }
