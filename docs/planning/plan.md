@@ -32,7 +32,7 @@
 | 시계열 | TimescaleDB (Postgres 확장) | 시세, 캔들. RDB와 같은 인스턴스 |
 | 영속성 | Spring Data JPA + Kotlin JDSL (RDB), `JdbcClient` (시계열. 일괄 삽입만 `NamedParameterJdbcTemplate`) | 4.3절 |
 | 증권사 API | KIS Developers REST + WebSocket | `@HttpExchange` HTTP Service Client |
-| 프론트엔드 | Next.js (App Router, 서버 컴포넌트), TypeScript, pnpm, Turbopack, shadcn/ui, Lightweight Charts + Recharts | Next 서버가 BFF로 Spring REST를 호출, 실시간은 SSE. [frontend.md](frontend.md) |
+| 프론트엔드 | Next.js (App Router, 서버 컴포넌트), TypeScript, pnpm, Turbopack, React Compiler, shadcn/ui, Lightweight Charts + Recharts | Next 서버가 BFF로 Spring REST를 호출, 실시간은 SSE. [frontend.md](frontend.md) |
 | 로컬 실행 | Docker Compose (TimescaleDB 이미지) | |
 | 에디터 | Zed + Claude Code | kopring-conventions 적용 |
 

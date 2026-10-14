@@ -14,6 +14,7 @@ Next.js 서버를 BFF(Backend For Frontend)로 두고, 화면은 서버 컴포�
 |---|---|---|
 | 프레임워크 | Next.js App Router (확인 시점 `next` 16.4.0, `react` 19.3.0). 서버 컴포넌트가 기본이고, Next 서버를 실행한다(정적 내보내기 아님) | SSE 중계, 서버 컴포넌트로 하는 서버 드리븐 UI |
 | 언어·도구 | TypeScript(확인 시점 7.0.2), 패키지 관리 pnpm(확인 시점 12.11.2), 번들러 [Turbopack](https://nextjs.org/docs/app/api-reference/turbopack)(Rust. Next 16부터 `next dev`·`next build` 기본값이라 설정 없음, `--webpack`을 쓰지 않는다) | 사용자 결정. Turbopack은 타입 검사를 하지 않으므로 `tsc --noEmit`을 따로 돌린다 |
+| React Compiler | 처음부터 켠다. `next.config.ts`에 `reactCompiler: true`(Next 16에서 정식), 개발 의존성 `babel-plugin-react-compiler` | `useMemo`·`useCallback`을 손으로 쓰지 않아도 렌더링을 줄여 준다. 다시 렌더링되는 것은 클라이언트 컴포넌트뿐이라 효과는 차트·실시간 가격·주문 폼에 난다. Next가 JSX·훅이 있는 파일에만 적용해 빌드 비용이 작다 |
 | 역할 | Next = BFF. Spring `/api/v1` 호출은 모두 Next 서버가 한다 | 토큰이 브라우저에 나가지 않고, 같은 오리진이라 CORS가 필요 없다 |
 | UI | [shadcn/ui](https://ui.shadcn.com/) (Tailwind) | 표·폼 위주의 관리 화면. `chart` 컴포넌트가 Recharts 기반 |
 | 저장소 | 이 저장소의 `frontend/` | API와 함께 바뀐다 |
@@ -146,4 +147,5 @@ Next.js 서버를 BFF(Backend For Frontend)로 두고, 화면은 서버 컴포�
 - [shadcn/ui Chart](https://ui.shadcn.com/docs/components/chart): Recharts v3 기반
 - [Next.js 블로그](https://nextjs.org/blog)
 - [Next.js Turbopack](https://nextjs.org/docs/app/api-reference/turbopack): Rust로 만든 번들러, 16.0.0부터 기본, 타입 검사 안 함
+- [Next.js reactCompiler](https://nextjs.org/docs/app/api-reference/config/next-config-js/reactCompiler): 16.0.0부터 정식, Babel 플러그인을 관련 파일에만 적용
 - 버전: `npm view pnpm typescript` (2026-10-14)

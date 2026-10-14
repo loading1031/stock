@@ -4,6 +4,7 @@
 
 ## 2026-10-14 decide | 프론트엔드 언어·도구 (B-03 보완)
 - 결정: TypeScript, 패키지 관리 pnpm, 번들러 Turbopack(Next 16 기본, 설정 없음). Turbopack은 타입 검사를 하지 않으므로 `tsc --noEmit`을 따로 돌린다
+- 결정: React Compiler를 처음부터 켠다(`reactCompiler: true`, `babel-plugin-react-compiler`)
 - 바뀐 문서: frontend.md 결정 사항·확인 필요·출처, plan.md 2장·8장, CLAUDE.md "결정된 사항"
 
 ## 2026-10-14 update | 용어: "킬 스위치" → 자동 주문 끄기, 미체결 주문 취소 (B-03)
