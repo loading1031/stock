@@ -9,12 +9,11 @@
 
 | 순서 | ID | 이슈 | 사용자 준비물 |
 |---|---|---|---|
-| 1 | B-03 프론트엔드 기술과 화면 | [#5](https://github.com/loading1031/stock/issues/5) | 없음 |
-| 2 | B-02 KIS API 검증 | [#6](https://github.com/loading1031/stock/issues/6) | **KIS 모의투자 신청 + KIS Developers 모의 앱키 발급** |
+| 1 | B-02 KIS API 검증 | [#6](https://github.com/loading1031/stock/issues/6) | **KIS 모의투자 신청 + KIS Developers 모의 앱키 발급** |
 | 아무 때나 | B-14 kopring 원본 정리 (claude-plugins 저장소에서) | [#7](https://github.com/loading1031/stock/issues/7) | A/B 선택 |
 | 아무 때나 | B-21 시각화 문서 동기화 | [#8](https://github.com/loading1031/stock/issues/8) | 없음 |
 
-B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-03을 먼저 닫는다. 모의투자 신청은 미리 해 두면 좋다(신청 후 3개월 미접속 해지 주의).
+B-02는 준비물이 있어야 의미가 있다. 모의투자 신청은 미리 해 두면 좋다(신청 후 3개월 미접속 해지 주의).
 
 ## 후보
 
@@ -43,7 +42,6 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-03을 먼
 
 | ID | 주제 | 브랜치 | 이슈 | 시작 |
 |---|---|---|---|---|
-| B-03 | 프론트엔드 기술과 화면 목록 | `plan/B-03-frontend` | [#5](https://github.com/loading1031/stock/issues/5) | 2026-10-14 |
 
 ## 완료
 
@@ -51,6 +49,7 @@ B-02는 준비물이 있어야 의미가 있으므로, 그 전까지 B-03을 먼
 |---|---|---|---|
 | B-01 | M0 설계: Claude·빌드 기반 | [m0-foundation.md](m0-foundation.md), plan.md 4.6(주문·체결 정합성), 이슈 [#2](https://github.com/loading1031/stock/issues/2) | 2026-10-13 |
 | B-13 | 마켓플레이스 GitHub 업로드 | [loading1031/claude-plugins](https://github.com/loading1031/claude-plugins)(public), 마켓플레이스를 GitHub 소스로 다시 등록, CLAUDE.md "플러그인" | 2026-10-13 |
+| B-03 | 프론트엔드 기술과 화면 목록 | [frontend.md](frontend.md), plan.md 2장·3.1·3.7·3.10·5장·7장, strategy.md 9.3·11.2, 용어 "자동 주문 끄기·미체결 주문 취소", 이슈 [#5](https://github.com/loading1031/stock/issues/5) | 2026-10-14 |
 | B-18 | 기획 관리를 GitHub 이슈로 | 작업지시서 = 이슈(라벨 `plan`), planning 0.5.0, CLAUDE.md "기획 진행 방식"·"Git", 이슈 [#4](https://github.com/loading1031/stock/issues/4) | 2026-10-14 |
 
 ## 동기화 빚
