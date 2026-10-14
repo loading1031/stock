@@ -10,7 +10,7 @@
 |---|---|
 | `docs/planning/plan.md` | 전체 기획: 기능, 아키텍처, 데이터 모델, 마일스톤(M0~M7), 확인 필요 항목 |
 | `docs/planning/m0-foundation.md` | M0 설계: 실측 버전, 실험 결과, 빌드·구조·이벤트 결정 (B-01) |
-| `docs/planning/frontend.md` | 프론트엔드: Next.js BFF, 인증(Next 세션 + 서비스 키), SSE, 차트, 화면 목록, 킬 스위치 (B-03) |
+| `docs/planning/frontend.md` | 프론트엔드: Next.js BFF, 인증(Next 세션 + 서비스 키), SSE, 차트, 화면 목록, 자동 주문 끄기·미체결 주문 취소 (B-03) |
 | `docs/planning/strategy.md` | 운영 전략: 워크플로(Mermaid), jev 배치, 위험 예산, 포지션 계획, 매도, 교체 매매, 평가 |
 | `docs/planning/backlog.md` | 다음에 기획할 후보 목록 |
 | GitHub 이슈 (라벨 [`plan`](https://github.com/loading1031/stock/issues?q=label%3Aplan)) | **작업지시서**: 항목마다 이슈 하나(본문 = 지시서, 댓글 = 진행 메모). 다음 세션이 이전 대화 없이 시작하도록 쓴다. 번호는 backlog.md의 이슈 칸 |
@@ -28,7 +28,7 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 - 기준 문서: plan.md
 - 시각화 문서: https://claude.ai/code/artifact/a712f001-c5c0-4731-8015-d1bed440fac6 (Claude Docs 도구로 고치고, 다이어그램은 스크린샷으로 렌더링 확인)
 - 용어: 아래 "용어" 절
-- 금지어: 단계
+- 금지어: 단계, 킬 스위치
 - 기본 브랜치: main
 - 기획 브랜치: plan/<ID>-<slug> (예: plan/B-03-frontend)
 - 합치기 방식: PR (머지 커밋, PR 본문의 `Closes #<이슈>`로 이슈를 닫음)
@@ -48,6 +48,7 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 
 - **운영 시기**: 모의 운영 → 실전 운영 → 확장
 - **개발 마일스톤**: M0 ~ M7 (`plan.md` 7장)
+- **자동 주문 끄기**: 강제 청산을 포함한 새 자동 주문을 막는 켜기·끄기. **미체결 주문 취소**: 고른 종목·방향의 미체결만 취소. "킬 스위치"라는 말은 쓰지 않는다(뜻이 넓어 "전량 청산"으로 오해된 적이 있다).
 - "1단계", "2단계" 같은 "단계"라는 말은 쓰지 않는다. 두 체계가 섞여 혼란이 생긴 적이 있다.
 
 ## 기획 진행 방식

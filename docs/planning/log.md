@@ -2,6 +2,11 @@
 
 최신이 위. 형식은 planning 플러그인의 `rules` 스킬.
 
+## 2026-10-14 update | 용어: "킬 스위치" → 자동 주문 끄기, 미체결 주문 취소 (B-03)
+- 결정: 새 자동 주문을 막는 기능은 "자동 주문 끄기"(켜기·끄기), 고른 종목·방향의 미체결을 취소하는 기능은 "미체결 주문 취소"로 부르고 버튼도 따로 둔다. "킬 스위치"는 금지어로 추가
+- 이유: "킬 스위치"는 "전량 청산·전부 취소"로 읽혀 실제로 strategy.md에 그렇게 적혀 있었다. 이름만 보고 동작을 알 수 있게
+- 바뀐 문서: CLAUDE.md 기획 설정(금지어)·용어·문서 표, plan.md 1장·3.7·4.5·5장(`risk_limits.auto_order_enabled`)·7장, strategy.md 머리말·0장 Mermaid·9.3·11.2·14장·16.3·18장(`exits.reason`에서 `KILL` 삭제), frontend.md, backlog.md B-04
+
 ## 2026-10-14 decide | 프론트엔드 기술과 화면 목록 (B-03)
 - 결정: Next.js(App Router, 서버 컴포넌트)를 BFF로 운영. 브라우저는 Next하고만 통신하고 Spring 호출은 모두 Next 서버가 한다. 같은 저장소 `frontend/`, shadcn/ui. 서버 렌더링(htmx)과 정적 내보내기는 고르지 않음 — SSE와 서버 컴포넌트 기반 서버 드리븐 UI가 목적
 - 결정: 인증은 Next 세션(암호화된 httpOnly 쿠키) + Spring 서비스 키. 비밀번호 확인은 Spring, 사용자 ID·권한은 Next가 헤더로 전달. JWT·`refresh_tokens` 삭제, CORS 불필요. 로그인 시도 제한은 로컬 전용인 동안 두지 않음

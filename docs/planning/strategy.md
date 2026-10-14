@@ -3,7 +3,7 @@
 - 작성일: 2026-10-10
 - 상태: 초안 (검토 중)
 - 관계: `plan.md` 3.6 전략과 자동매매를 구체화한 문서. 리스크 규칙(`plan.md` 3.7)은 이 문서의 모든 판단보다 우선한다.
-- 용어: `plan.md`와 같다. 운영 시기는 모의 운영 → 실전 운영 → 확장(`plan.md` 1장), 개발 순서는 마일스톤 M0~M7(`plan.md` 7장).
+- 용어: `plan.md`와 같다. 운영 시기는 모의 운영 → 실전 운영 → 확장(`plan.md` 1장), 개발 순서는 마일스톤 M0~M7(`plan.md` 7장). 자동 주문 끄기·미체결 주문 취소도 `plan.md` 1장과 같다("킬 스위치"라는 말은 쓰지 않는다).
 
 ## 0. 워크플로
 
@@ -34,7 +34,7 @@ flowchart TB
     subgraph RULE[규칙·결정]
         R1[국면 판정<br/>배수 0 ~ 1.0]
         R2[결정<br/>강제 청산 → 매도 → 예산 → 순위]
-        R3[리스크 검사<br/>한도 · 예산 · 킬 스위치]
+        R3[리스크 검사<br/>한도 · 예산 · 자동 주문 켜짐]
         R4[강제 청산 감시<br/>손절 · 트레일링 · 시간]
         R5[교체 판단<br/>점수차 ≥ 0.15]
     end
@@ -60,7 +60,7 @@ flowchart TB
     R2 -->|08:45 후보 목록| C4 -->|필요 금액| R5 --> R3 -->|09:00| E1
     R2 -.->|같은 판단, 주문 없음| E4
     E4 -.->|운영 장부와 비교| C5
-    D6 -->|장중| R4 -->|jev 거치지 않음<br/>킬 스위치가 켜지면 멈춤| E2
+    D6 -->|장중| R4 -->|jev 거치지 않음<br/>자동 주문을 끄면 멈춤| E2
     E1 --> E3
     E2 --> E3
     E3 -->|15:40| C5
@@ -243,7 +243,7 @@ PLANNED → ACCUMULATING → HOLDING → EXITING → CLOSED
 - `ACCUMULATING → HOLDING`: 목표 금액을 다 채우면 추가 매수를 멈춘다. 이후로는 매도 규칙(11장)만 적용한다.
 - 만료되면 남은 회차를 취소하고, 이미 산 수량으로 `HOLDING`에 들어간다. 무효화 가격은 그대로 둔다.
 - `CANCELLED`가 무효화 가격 도달 때문이면 보유분을 전량 손절한다.
-- 킬 스위치가 켜지면 계획 상태는 그대로 두고 회차·청산 주문만 나가지 않는다. 끄면 이어진다. 그사이 만료일이 지난 계획은 평소처럼 만료한다(제안). ([frontend.md](frontend.md) "킬 스위치")
+- 자동 주문을 끄면 계획 상태는 그대로 두고 회차·청산 주문만 나가지 않는다. 다시 켜면 이어진다. 그사이 만료일이 지난 계획은 평소처럼 만료한다(제안). ([frontend.md](frontend.md) "자동 주문 끄기와 미체결 주문 취소")
 
 ## 10. 목표 주가
 
@@ -280,7 +280,7 @@ PLANNED → ACCUMULATING → HOLDING → EXITING → CLOSED
 | 트레일링 스탑 | 목표 주가 도달 이후, 가격 ≤ 최고가 − k × ATR | 남은 전량 |
 | 시간 청산 | 보유 20거래일 초과 | 전량 |
 | 일일 손실 한도 | 계좌 일일 손실이 한도 초과 | 그날 신규 매수 중단. 청산 여부는 설정 |
-| 킬 스위치 | 수동 | 매도하지 않는다. 켜져 있는 동안 위 강제 청산 주문도 나가지 않는다 (2026-10-14, [plan.md](plan.md) 3.7) |
+| 자동 주문 끄기 | 수동 | 매도하지 않는다. 꺼져 있는 동안 위 강제 청산 주문도 나가지 않는다 (2026-10-14, [plan.md](plan.md) 3.7) |
 
 - 모의투자는 조건부(스탑) 주문을 지원하지 않는 것으로 알려져 있다. 그래서 **실시간 시세를 코드가 감시하다가 조건이 되면 주문**한다. 실전에서도 같은 코드를 쓴다.
 - 손절 주문은 시장가로 낸다. 체결이 우선이다.
@@ -336,7 +336,7 @@ PLANNED → ACCUMULATING → HOLDING → EXITING → CLOSED
 
 ```
 0. 사전 확인: 증권사 토큰 발급 성공, 계좌 리셋 판정 없음, 데이터 수집 완료, 대사 일치,
-   Ollama 응답 정상, 킬 스위치 꺼짐
+   Ollama 응답 정상, 자동 주문 켜짐
    하나라도 실패 → 신규 매수 없음, 강제 청산만 (토큰 실패면 강제 청산도 불가 → 즉시 알림)
 1. 강제 청산 대상 확정 (규칙)
 2. jev 재평가 매도 (SELL / REDUCE)
@@ -401,7 +401,7 @@ PLANNED → ACCUMULATING → HOLDING → EXITING → CLOSED
 
 - 운영 장부가 단순 규칙 장부를 3개월 이상 비용 차감 후 수익률과 MDD 모두에서 앞섬
 - 보수적 체결 모델의 백테스트에서도 수익이 남음
-- 강제 청산, 킬 스위치, 대사가 모의에서 실제로 한 번 이상 동작한 기록이 있음
+- 강제 청산, 자동 주문 끄기, 대사가 모의에서 실제로 한 번 이상 동작한 기록이 있음
 
 ## 17. 파라미터 초기값
 
@@ -431,7 +431,7 @@ PLANNED → ACCUMULATING → HOLDING → EXITING → CLOSED
 | `decisions` | id, trade_date, instrument, kind(BUY_SCREEN/REVIEW/NEWS/THESIS), model, model_digest, input_hash, 질문, 확률 JSON, decided_at |
 | `position_plans` | id, account_id, instrument, mode(TIME/AVG_DOWN/PYRAMID), target_amount, invalidation_price, target_price, status, expires_on, entry_decision_id, version |
 | `plan_tranches` | id, plan_id, seq, amount, condition, status, order_id |
-| `exits` | id, plan_id, reason(STOP/TRAILING/TIME/TARGET/REVIEW/ROTATION/KILL), order_id, decision_id |
+| `exits` | id, plan_id, reason(STOP/TRAILING/TIME/TARGET/REVIEW/ROTATION), order_id, decision_id |
 | `rotations` | id, trade_date, sell_plan_id, buy_plan_id, score_gap, sell_order_id, buy_order_id, status(PENDING_SELL/BUY_RELEASED/ABORTED) |
 | `account_epochs` | account_id, epoch, started_at, reason(INITIAL/RESET/REAPPLY), starting_equity — 성과 구간 |
 | `paper_books` | book(NO_ROTATION/JEV_BUY_ONLY/RULE), trade_date, 가상 보유·체결 |
