@@ -6,6 +6,9 @@
           "code" : {
             "type" : "string"
           },
+          "currency" : {
+            "type" : "string"
+          },
           "limitPrice" : {
             "format" : "decimal",
             "type" : [ "string", "null" ]
