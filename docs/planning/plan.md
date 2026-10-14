@@ -32,7 +32,7 @@
 | 시계열 | TimescaleDB (Postgres 확장) | 시세, 캔들. RDB와 같은 인스턴스 |
 | 영속성 | Spring Data JPA + Kotlin JDSL (RDB), `JdbcClient` (시계열. 일괄 삽입만 `NamedParameterJdbcTemplate`) | 4.3절 |
 | 증권사 API | KIS Developers REST + WebSocket | `@HttpExchange` HTTP Service Client |
-| 프론트엔드 | Next.js (App Router, 서버 컴포넌트), shadcn/ui, Lightweight Charts + Recharts | Next 서버가 BFF로 Spring REST를 호출, 실시간은 SSE. [frontend.md](frontend.md) |
+| 프론트엔드 | Next.js (App Router, 서버 컴포넌트), TypeScript, pnpm, Turbopack, React Compiler, shadcn/ui, Lightweight Charts + Recharts | Next 서버가 BFF로 Spring REST를 호출, 실시간은 SSE. [frontend.md](frontend.md) |
 | 로컬 실행 | Docker Compose (TimescaleDB 이미지) | |
 | 에디터 | Zed + Claude Code | kopring-conventions 적용 |
 
@@ -381,7 +381,7 @@ KIS가 주는 정보 ([open-trading-api](https://github.com/koreainvestment/open
 - [ ] 모의투자 체결 규칙 실측: 현재가보다 유리한 지정가가 즉시 체결되는지, 실제 체결량만큼만 체결되는지, 부분 체결과 체결통보가 오는지, 시간외 주문이 거부되는지
 - [ ] 모의투자 참가 기간 선택지, 재신청 시 계좌번호·API 키 변경 여부, 3개월 미접속 기준에 API 호출 포함 여부, KIS Developers 모의 API 키 유효기간
 - [x] 프론트엔드 기술 — 2026-10-14 Next.js로 결정([frontend.md](frontend.md))
-- [ ] Next 세션 구현 방식, Node 버전·패키지 매니저, `bootRun`과 `next dev`를 함께 띄우는 방법, TradingView 출처 표기 방식 — [frontend.md](frontend.md)
+- [ ] Next 세션 구현 방식, Node 버전, `bootRun`과 `next dev`를 함께 띄우는 방법, TradingView 출처 표기 방식 — [frontend.md](frontend.md)
 - [ ] 과거 캔들 데이터 출처: KIS 조회 API의 기간 제한, KRX Open API 이용 약관(개인 사용 조건)
 - [ ] KIS API의 NXT 시세 제공 여부, 주문 시 KRX/NXT/SOR 지정 방법, 모의투자에서 NXT·애프터마켓 지원 여부
 - [ ] KRX 애프터마켓 운영 시간과 대상 (2026년 개설 보도)

@@ -13,6 +13,9 @@ Next.js 서버를 BFF(Backend For Frontend)로 두고, 화면은 서버 컴포�
 | 항목 | 결정 | 이유 |
 |---|---|---|
 | 프레임워크 | Next.js App Router (확인 시점 `next` 16.4.0, `react` 19.3.0). 서버 컴포넌트가 기본이고, Next 서버를 실행한다(정적 내보내기 아님) | SSE 중계, 서버 컴포넌트로 하는 서버 드리븐 UI |
+| 언어·도구 | TypeScript(확인 시점 7.0.2), 패키지 관리 pnpm(확인 시점 12.11.2), 번들러 [Turbopack](https://nextjs.org/docs/app/api-reference/turbopack)(Rust. Next 16부터 `next dev`·`next build` 기본값이라 설정 없음, `--webpack`을 쓰지 않는다) | 사용자 결정. Turbopack은 타입 검사를 하지 않으므로 `tsc --noEmit`을 따로 돌린다 |
+| React Compiler | 처음부터 켠다. `next.config.ts`에 `reactCompiler: true`(Next 16에서 정식), 개발 의존성 `babel-plugin-react-compiler` | `useMemo`·`useCallback`을 손으로 쓰지 않아도 렌더링을 줄여 준다. 다시 렌더링되는 것은 클라이언트 컴포넌트뿐이라 효과는 차트·실시간 가격·주문 폼에 난다. Next가 JSX·훅이 있는 파일에만 적용해 빌드 비용이 작다 |
+| 메모이제이션 컨벤션 | `useMemo`, `useCallback`, `React.memo`를 쓰지 않는다. 메모이제이션은 React Compiler에 맡긴다 | 손으로 쓴 메모이제이션은 의존성 배열 실수가 잦고, 컴파일러와 겹친다 |
 | 역할 | Next = BFF. Spring `/api/v1` 호출은 모두 Next 서버가 한다 | 토큰이 브라우저에 나가지 않고, 같은 오리진이라 CORS가 필요 없다 |
 | UI | [shadcn/ui](https://ui.shadcn.com/) (Tailwind) | 표·폼 위주의 관리 화면. `chart` 컴포넌트가 Recharts 기반 |
 | 저장소 | 이 저장소의 `frontend/` | API와 함께 바뀐다 |
@@ -108,6 +111,13 @@ Next.js 서버를 BFF(Backend For Frontend)로 두고, 화면은 서버 컴포�
 - 제안: 다시 켤 때, 켜지는 즉시 나갈 강제 청산 주문(그사이 조건에 닿은 종목)을 보여 주고 확인받는다.
 - 제안: 자동 주문이 꺼진 동안 만료일이 지난 포지션 계획은 평소처럼 만료한다.
 
+### 프론트엔드 컨벤션
+
+- 메모이제이션 훅(`useMemo`, `useCallback`)과 `React.memo`는 쓰지 않는다. React Compiler가 맡는다.
+- 상태·효과 훅(`useState`, `useEffect`, `useRef`)은 클라이언트 컴포넌트에서만 쓴다. 화면 대부분은 서버 컴포넌트라 훅이 없다.
+- 제안: ESLint `no-restricted-imports`로 `useMemo`·`useCallback`·`memo` 가져오기를 막는다. 컴파일러가 최적화를 포기한 컴포넌트를 찾도록 `eslint-plugin-react-hooks`의 컴파일러 규칙을 켠다.
+- 제안: 컴파일러가 잘못 최적화하는 경우에만 `"use no memo"`를 쓰고, 그 이유를 주석으로 남긴다.
+
 ## 데이터 모델 영향
 
 - `refresh_tokens` 삭제. 세션은 Next의 암호화 쿠키에 있고 DB에 두지 않는다.
@@ -130,7 +140,7 @@ Next.js 서버를 BFF(Backend For Frontend)로 두고, 화면은 서버 컴포�
 ## 확인이 필요한 것
 
 - [ ] Next 세션 구현 방식 (직접 암호화한 쿠키 / iron-session / Auth.js)
-- [ ] Node 버전과 패키지 매니저, 개발할 때 `bootRun`과 `next dev`를 함께 띄우는 방법
+- [ ] Node 버전, 개발할 때 `bootRun`과 `next dev`를 함께 띄우는 방법
 - [ ] TradingView 출처 표기 방식(차트 로고 `attributionLogo` / 화면 하단 링크). Apache-2.0 NOTICE와 tradingview.com 링크가 필요하다
 - [ ] Recharts 번들 크기 (빌드 후 측정)
 - [ ] 분봉 수천 개와 실시간 갱신에서 Lightweight Charts 체감 성능 (M2)
@@ -144,3 +154,6 @@ Next.js 서버를 BFF(Backend For Frontend)로 두고, 화면은 서버 컴포�
 - [Recharts API](https://recharts.github.io/en-US/api): 차트 종류, SVG
 - [shadcn/ui Chart](https://ui.shadcn.com/docs/components/chart): Recharts v3 기반
 - [Next.js 블로그](https://nextjs.org/blog)
+- [Next.js Turbopack](https://nextjs.org/docs/app/api-reference/turbopack): Rust로 만든 번들러, 16.0.0부터 기본, 타입 검사 안 함
+- [Next.js reactCompiler](https://nextjs.org/docs/app/api-reference/config/next-config-js/reactCompiler): 16.0.0부터 정식, Babel 플러그인을 관련 파일에만 적용
+- 버전: `npm view pnpm typescript` (2026-10-14)
