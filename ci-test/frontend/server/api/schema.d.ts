@@ -26,6 +26,7 @@ export interface components {
     schemas: {
         Quote: {
             code: string;
+            currency: string;
             /** Format: decimal */
             limitPrice: string | null;
             memo: string | null;
