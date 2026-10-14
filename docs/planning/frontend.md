@@ -13,6 +13,7 @@ Next.js 서버를 BFF(Backend For Frontend)로 두고, 화면은 서버 컴포�
 | 항목 | 결정 | 이유 |
 |---|---|---|
 | 프레임워크 | Next.js App Router (확인 시점 `next` 16.4.0, `react` 19.3.0). 서버 컴포넌트가 기본이고, Next 서버를 실행한다(정적 내보내기 아님) | SSE 중계, 서버 컴포넌트로 하는 서버 드리븐 UI |
+| 언어·도구 | TypeScript(확인 시점 7.0.2), 패키지 관리 pnpm(확인 시점 12.11.2), 번들러 [Turbopack](https://nextjs.org/docs/app/api-reference/turbopack)(Rust. Next 16부터 `next dev`·`next build` 기본값이라 설정 없음, `--webpack`을 쓰지 않는다) | 사용자 결정. Turbopack은 타입 검사를 하지 않으므로 `tsc --noEmit`을 따로 돌린다 |
 | 역할 | Next = BFF. Spring `/api/v1` 호출은 모두 Next 서버가 한다 | 토큰이 브라우저에 나가지 않고, 같은 오리진이라 CORS가 필요 없다 |
 | UI | [shadcn/ui](https://ui.shadcn.com/) (Tailwind) | 표·폼 위주의 관리 화면. `chart` 컴포넌트가 Recharts 기반 |
 | 저장소 | 이 저장소의 `frontend/` | API와 함께 바뀐다 |
@@ -130,7 +131,7 @@ Next.js 서버를 BFF(Backend For Frontend)로 두고, 화면은 서버 컴포�
 ## 확인이 필요한 것
 
 - [ ] Next 세션 구현 방식 (직접 암호화한 쿠키 / iron-session / Auth.js)
-- [ ] Node 버전과 패키지 매니저, 개발할 때 `bootRun`과 `next dev`를 함께 띄우는 방법
+- [ ] Node 버전, 개발할 때 `bootRun`과 `next dev`를 함께 띄우는 방법
 - [ ] TradingView 출처 표기 방식(차트 로고 `attributionLogo` / 화면 하단 링크). Apache-2.0 NOTICE와 tradingview.com 링크가 필요하다
 - [ ] Recharts 번들 크기 (빌드 후 측정)
 - [ ] 분봉 수천 개와 실시간 갱신에서 Lightweight Charts 체감 성능 (M2)
@@ -144,3 +145,5 @@ Next.js 서버를 BFF(Backend For Frontend)로 두고, 화면은 서버 컴포�
 - [Recharts API](https://recharts.github.io/en-US/api): 차트 종류, SVG
 - [shadcn/ui Chart](https://ui.shadcn.com/docs/components/chart): Recharts v3 기반
 - [Next.js 블로그](https://nextjs.org/blog)
+- [Next.js Turbopack](https://nextjs.org/docs/app/api-reference/turbopack): Rust로 만든 번들러, 16.0.0부터 기본, 타입 검사 안 함
+- 버전: `npm view pnpm typescript` (2026-10-14)

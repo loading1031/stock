@@ -65,7 +65,7 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 | 기능 경계 | 다른 기능은 `adapter/out`(상대 `application/service` 호출)과 이벤트 리스너(상대 `domain/event` 수신)에서만 참조. 순환 금지. ArchUnit으로 검사 |
 | 영속성 | JPA + Kotlin JDSL. 시계열만 `JdbcClient` + SQL (명시적 예외, 일괄 삽입은 `NamedParameterJdbcTemplate`) |
 | 모듈 간 소통 | Spring 내부 이벤트 + Spring Modulith 이벤트 발행 기록(Postgres). Kafka·Redis·R2DBC는 쓰지 않음 |
-| 프론트엔드 | Next.js(App Router, 서버 컴포넌트)를 BFF로, 같은 저장소 `frontend/`. shadcn/ui, 차트는 Lightweight Charts(캔들·실시간) + Recharts(성과). 실시간은 SSE. Next가 사용자 세션을 맡고 Spring은 서비스 키로 Next 요청만 받음(JWT·Refresh 없음). `docs/planning/frontend.md` |
+| 프론트엔드 | Next.js(App Router, 서버 컴포넌트)를 BFF로, TypeScript + pnpm + Turbopack(Next 기본 번들러), 같은 저장소 `frontend/`. shadcn/ui, 차트는 Lightweight Charts(캔들·실시간) + Recharts(성과). 실시간은 SSE. Next가 사용자 세션을 맡고 Spring은 서비스 키로 Next 요청만 받음(JWT·Refresh 없음). `docs/planning/frontend.md` |
 | 증권사·데이터 | KIS Open API (주문, 국내·해외 시세, 선물). 과거 일봉 백필은 KRX Open API |
 | 판단 모델 | Ollama 결정 모델 jev(`nimble`). 판단만, 숫자는 코드, 한도는 규칙 |
 | 테스트 | JUnit 6, 뮤테이션 테스트 PIT(`domain`·`application/service`, 변경분은 `git diff`로 대상 지정, 기준선 없음), ArchUnit |
