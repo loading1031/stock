@@ -22,8 +22,6 @@
 ## 기획 설정
 planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋·브랜치·이슈 규칙)는 플러그인 스킬이 원본**이라 여기에 옮겨 적지 않는다.
 
-- 최소 버전: 0.6.0
-
 - 기획 폴더: docs/planning
 - 기준 문서: plan.md
 - 시각화 문서: https://claude.ai/code/artifact/a712f001-c5c0-4731-8015-d1bed440fac6 (Claude Docs 도구로 고치고, 다이어그램은 스크린샷으로 렌더링 확인)
@@ -53,7 +51,7 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 
 ## 기획 진행 방식
 
-`/planning:backlog`로 시작한다(backlog.md "권장 순서" → `pick <ID>`가 이슈를 읽는다). 절차와 규칙은 planning 스킬에 있다. `/planning:`이 자동완성되지 않거나 스킬이 최소 버전보다 낮다고 하면, 셸에서 `claude plugin marketplace update loading1031-plugins && claude plugin update planning@loading1031-plugins` 후 재시작한다.
+`/planning:backlog`로 시작한다(backlog.md "권장 순서" → `pick <ID>`가 이슈를 읽는다). 절차와 규칙은 planning 스킬에 있다. `/planning:`이 자동완성되지 않으면, 셸에서 `claude plugin marketplace update loading1031-plugins && claude plugin update planning@loading1031-plugins` 후 재시작한다.
 
 ## 결정된 사항
 
@@ -82,7 +80,7 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 | `planning` | 기획 진행 (`/planning:backlog` → `spec` → `commit` → `done`, `handoff`). git 명령 검사 훅(add -A, 커밋 접두어·Refs, 금지어) |
 | `kopring` | Kotlin + Spring 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 |
 
-플러그인 자체를 고칠 때는 마켓플레이스 저장소에서 고친다. 이 저장소에 규칙·명령을 복사하지 않는다. 고친 뒤 GitHub에 push하고 `claude plugin marketplace update loading1031-plugins`를 실행해야 반영된다(로컬 폴더를 고치는 것만으로는 적용되지 않는다).
+플러그인 자체를 고칠 때는 마켓플레이스 저장소에서 고친다. 이 저장소에 규칙·명령을 복사하지 않는다. 고친 뒤 GitHub에 push하면 반영된다. 플러그인에 버전 번호가 없어 커밋이 곧 버전이고, `.claude/settings.json`의 `extraKnownMarketplaces`에 `autoUpdate: true`를 켜 두어 세션 시작 후 백그라운드로 받는다(다음 실행 또는 `/reload-plugins`에 적용). 바로 받으려면 `claude plugin marketplace update loading1031-plugins && claude plugin update planning@loading1031-plugins`. 로컬 폴더를 고치는 것만으로는 적용되지 않는다.
 
 ## 코드 작업 (M0 이후)
 

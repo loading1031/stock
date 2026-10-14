@@ -2,5 +2,14 @@
   "enabledPlugins": {
     "planning@loading1031-plugins": true,
     "kopring@loading1031-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "loading1031-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "loading1031/claude-plugins"
+      },
+      "autoUpdate": true
+    }
   }
 }
