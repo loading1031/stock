@@ -10,6 +10,7 @@
 |---|---|
 | `docs/planning/plan.md` | 전체 기획: 기능, 아키텍처, 데이터 모델, 마일스톤(M0~M7), 확인 필요 항목 |
 | `docs/planning/m0-foundation.md` | M0 설계: 실측 버전, 실험 결과, 빌드·구조·이벤트 결정 (B-01) |
+| `docs/planning/frontend.md` | 프론트엔드: Next.js BFF, 인증(Next 세션 + 서비스 키), SSE, 차트, 화면 목록, 킬 스위치 (B-03) |
 | `docs/planning/strategy.md` | 운영 전략: 워크플로(Mermaid), jev 배치, 위험 예산, 포지션 계획, 매도, 교체 매매, 평가 |
 | `docs/planning/backlog.md` | 다음에 기획할 후보 목록 |
 | GitHub 이슈 (라벨 [`plan`](https://github.com/loading1031/stock/issues?q=label%3Aplan)) | **작업지시서**: 항목마다 이슈 하나(본문 = 지시서, 댓글 = 진행 메모). 다음 세션이 이전 대화 없이 시작하도록 쓴다. 번호는 backlog.md의 이슈 칸 |
@@ -65,6 +66,7 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 | 기능 경계 | 다른 기능은 `adapter/out`(상대 `application/service` 호출)과 이벤트 리스너(상대 `domain/event` 수신)에서만 참조. 순환 금지. ArchUnit으로 검사 |
 | 영속성 | JPA + Kotlin JDSL. 시계열만 `JdbcClient` + SQL (명시적 예외, 일괄 삽입은 `NamedParameterJdbcTemplate`) |
 | 모듈 간 소통 | Spring 내부 이벤트 + Spring Modulith 이벤트 발행 기록(Postgres). Kafka·Redis·R2DBC는 쓰지 않음 |
+| 프론트엔드 | Next.js(App Router, 서버 컴포넌트)를 BFF로, 같은 저장소 `frontend/`. shadcn/ui, 차트는 Lightweight Charts(캔들·실시간) + Recharts(성과). 실시간은 SSE. Next가 사용자 세션을 맡고 Spring은 서비스 키로 Next 요청만 받음(JWT·Refresh 없음). `docs/planning/frontend.md` |
 | 증권사·데이터 | KIS Open API (주문, 국내·해외 시세, 선물). 과거 일봉 백필은 KRX Open API |
 | 판단 모델 | Ollama 결정 모델 jev(`nimble`). 판단만, 숫자는 코드, 한도는 규칙 |
 | 테스트 | JUnit 6, 뮤테이션 테스트 PIT(`domain`·`application/service`, 변경분은 `git diff`로 대상 지정, 기준선 없음), ArchUnit |
