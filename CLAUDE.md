@@ -29,10 +29,11 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 - 용어: 아래 "용어" 절
 - 금지어: 단계, 킬 스위치
 - 기본 브랜치: main
+- 개발 브랜치: dev (코드 브랜치는 dev에서 분기하고 dev로 PR. 기획은 main)
 - 기획 브랜치: plan/<ID>-<slug> (예: plan/B-03-frontend)
 - 합치기 방식: PR (머지 커밋, PR 본문의 `Closes #<이슈>`로 이슈를 닫음)
 - 작업지시서: issue (GitHub 이슈, 라벨 `plan`. 진행 메모는 댓글)
-- 코드 브랜치: `<종류>/M<번호>-<slug>`(예: `feat/M1-auth`), 작업에 이슈가 있으면 `<종류>/<이슈 번호>-<slug>`. 상세는 `docs/planning/m0-foundation.md`
+- 코드 브랜치: `<종류>/M<번호>-<slug>`(예: `feat/M1-auth`), 작업에 이슈가 있으면 `<종류>/<이슈 번호>-<slug>`. `dev`에서 만든다. 상세는 `docs/planning/m0-foundation.md`
 
 ### 동기화 표
 | 바뀐 것 | 함께 고칠 곳 |

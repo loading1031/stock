@@ -1,7 +1,16 @@
 {
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(!./.env.example)"
+    ]
+  },
   "enabledPlugins": {
     "planning@loading1031-plugins": true,
-    "kopring@loading1031-plugins": true
+    "kopring@loading1031-plugins": true,
+    "design@loading1031-plugins": true,
+    "nextts@loading1031-plugins": true
   },
   "extraKnownMarketplaces": {
     "loading1031-plugins": {
@@ -11,12 +20,5 @@
       },
       "autoUpdate": true
     }
-  },
-  "permissions": {
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(!./.env.example)"
-    ]
   }
 }
