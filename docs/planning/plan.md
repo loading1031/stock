@@ -10,10 +10,10 @@
 | 운영 시기 | 목표 | 판단 기준 |
 |---|---|---|
 | 모의 운영 | 한국투자증권(KIS) **모의투자** 계좌로 수동 주문, 자동 주문, 손익 확인까지 끝까지 동작 | 전략 하나가 한 달 동안 사람 개입 없이 돌아가고, 증권사 잔고와 내부 잔고가 어긋나지 않음 |
-| 실전 운영 | 같은 코드로 KIS **실전** 계좌 연결 | 리스크 한도와 킬 스위치를 검증한 뒤에만 실전 모드 허용 |
+| 실전 운영 | 같은 코드로 KIS **실전** 계좌 연결 | 리스크 한도와 자동 주문 끄기를 검증한 뒤에만 실전 모드 허용 |
 | 확장 | 두 번째 증권사 연결 | 증권사를 추가할 때 주문·전략 코드를 고치지 않음 |
 
-이 문서에서 "운영 시기"는 위 세 가지를, 개발 순서(7장)는 마일스톤 M0~M7을 가리킨다. "단계"라는 말은 쓰지 않는다.
+이 문서에서 "운영 시기"는 위 세 가지를, 개발 순서(7장)는 마일스톤 M0~M7을 가리킨다. "단계"라는 말은 쓰지 않는다. 새 자동 주문을 막는 기능은 **자동 주문 끄기**(켜기·끄기), 고른 종목의 미체결을 취소하는 기능은 **미체결 주문 취소**라고 부른다. "킬 스위치"라는 말은 쓰지 않는다(2026-10-14).
 
 범위에서 뺀 것:
 
@@ -32,7 +32,7 @@
 | 시계열 | TimescaleDB (Postgres 확장) | 시세, 캔들. RDB와 같은 인스턴스 |
 | 영속성 | Spring Data JPA + Kotlin JDSL (RDB), `JdbcClient` (시계열. 일괄 삽입만 `NamedParameterJdbcTemplate`) | 4.3절 |
 | 증권사 API | KIS Developers REST + WebSocket | `@HttpExchange` HTTP Service Client |
-| 프론트엔드 | 별도 SPA (미정) | REST + WebSocket/SSE |
+| 프론트엔드 | Next.js (App Router, 서버 컴포넌트), shadcn/ui, Lightweight Charts + Recharts | Next 서버가 BFF로 Spring REST를 호출, 실시간은 SSE. [frontend.md](frontend.md) |
 | 로컬 실행 | Docker Compose (TimescaleDB 이미지) | |
 | 에디터 | Zed + Claude Code | kopring-conventions 적용 |
 
@@ -41,7 +41,7 @@
 ### 3.1 인증 (auth)
 
 - 회원가입, 로그인, 로그아웃. 비밀번호는 BCrypt(또는 Argon2)로 해시한다.
-- 프론트엔드가 별도 SPA이므로 **짧은 Access Token(JWT) + Postgres에 저장하는 Refresh Token**으로 한다. Refresh Token은 회전시키고, 로그아웃하면 폐기한다.
+- **Next가 사용자 세션을 맡고, Spring은 Next만 믿는다**(2026-10-14 결정). Next가 비밀번호 확인을 Spring에 요청하고, 맞으면 암호화된 httpOnly 세션 쿠키를 발급한다. Spring은 서비스 키로 Next 요청인지 확인하고, 사용자 ID·권한은 Next가 넣는 헤더로 받는다. JWT·Refresh Token은 쓰지 않는다. 상세는 [frontend.md](frontend.md).
 - 권한: `USER`, `ADMIN`. 혼자 쓰더라도 실전 모드 전환 같은 위험한 작업은 `ADMIN`만 하게 나눠 둔다.
 
 ### 3.2 증권사 계좌 연결 (brokerage)
@@ -69,7 +69,7 @@
 
 - **시세 소스와 주문 증권사를 분리한다.** 시세 포트(`LoadCandlesPort`, `QuoteStreamPort`)와 주문 포트(`PlaceOrderPort`)는 별개이고, 각각의 구현 선택도 `config`에서 따로 한다. 예: 시세는 KIS, 백필은 KRX, 주문은 다른 증권사.
 - 종목 마스터(코드, 이름, 시장, 호가 단위, NXT 거래 대상 여부)를 저장한다. NXT 대상 종목은 고정돼 있지 않으므로 주기적으로 갱신한다.
-- 관심 종목의 실시간 체결가는 프론트엔드에 SSE/WebSocket으로 중계한다.
+- 관심 종목의 실시간 체결가는 SSE로 Next를 거쳐 프론트엔드에 중계한다([frontend.md](frontend.md)).
 - 분봉·일봉 캔들을 TimescaleDB hypertable에 저장한다. 캔들에는 시장 구분(KRX / NXT / 통합)을 둔다.
 - 장 운영 캘린더는 **시장과 세션 단위**로 둔다. 기준 시간대는 `Asia/Seoul`이다.
 
@@ -126,7 +126,7 @@ CREATED ─(리스크 통과)→ SUBMITTING ─(증권사 접수)→ ACCEPTED �
 모든 자동 주문은 리스크 검사를 거친다. 수동 주문도 같은 검사를 쓰되, 일부 한도는 경고만 한다.
 
 - 검사는 두 번 한다(2026-10-13 결정). **결정할 때**는 사이징이 한도를 입력으로 써서 한도 안의 수량을 계산한다(트랜잭션 불필요). **주문을 저장할 때**는 계좌를 잠근 채 지금 상태로 다시 확인하고, 통과하면 같은 트랜잭션에서 금액·수량을 묶는다(4.6).
-- 저장 트랜잭션에서 잠금이 필요한 것은 다른 주문과 함께 쓰는 상태에 기대는 규칙뿐이다: 주문 가능 금액, 매도 가능 수량, 종목당 비중, 일일 손실. 주문당 금액·거래 시간·킬 스위치·계획 외 매수는 그 순간 값만 확인한다.
+- 저장 트랜잭션에서 잠금이 필요한 것은 다른 주문과 함께 쓰는 상태에 기대는 규칙뿐이다: 주문 가능 금액, 매도 가능 수량, 종목당 비중, 일일 손실. 주문당 금액·거래 시간·자동 주문 켜짐 여부·계획 외 매수는 그 순간 값만 확인한다.
 
 | 규칙 | 예 |
 |---|---|
@@ -135,7 +135,8 @@ CREATED ─(리스크 통과)→ SUBMITTING ─(증권사 접수)→ ACCEPTED �
 | 일일 손실 한도 | 넘으면 그날 자동매매 정지 |
 | 주문 빈도 | 증권사 호출 한도 안에서. 모의투자는 초당 2회로 알려져 있음(**검증하지 않음**) |
 | 거래 가능 시간 | 기본은 정규장만 자동 주문 허용. 프리·애프터마켓 자동 주문은 전략별로 명시적으로 켜며, 모의 계좌에서는 켤 수 없다 |
-| **킬 스위치** | 버튼 하나로 모든 전략 정지 + 미체결 주문 취소 |
+| **자동 주문 끄기** | 강제 청산을 포함한 새 자동 주문을 막는다. 이미 낸 주문과 보유 종목에는 손대지 않는다. 꺼진 동안 수동 주문은 한 번 더 확인 (2026-10-14 결정, [frontend.md](frontend.md)) |
+| **미체결 주문 취소** | 입력한 종목·방향(매수/매도)의 미체결만 취소한다. 기본은 빈 목록이라 아무것도 취소하지 않는다. 자동 주문 끄기와 별개의 버튼 (2026-10-14 결정) |
 | **미수 금지** (제안, 2026-10-13) | 매수는 원화 현금 잔고 − 묶음 안에서만. KIS 주문 가능 금액이 더 크게 나와도(증거금률, 통합증거금) 우리 계산을 상한으로 쓴다 |
 
 - **통합증거금** (한국투자증권 모의투자 안내 자료, 2026-10-13 확인): 국내·해외 주식을 한 계좌로 거래하며, 원화·외화 예수금과 국내·해외 매도 대금을 환전 없이 국내·해외 매수에 쓸 수 있다(미국·일본·중국·홍콩, 베트남 제외). 외화는 최초 고시 환율 × 95%로 환산하고, 해외 매수 가능 금액은 1.1로 나누며, 국내 매수 가능 금액은 종목별 증거금률(20~100%)로 나눈다. 결제 때 부족하면 미수금이 생기고 다음 날 반대매매된다. 모의투자의 통합증거금은 간소화되어 실제 서버와 다를 수 있다. 그래서 KIS 주문 가능 금액은 실제 현금보다 클 수 있고, 위 "미수 금지"가 필요하다.
@@ -156,9 +157,12 @@ CREATED ─(리스크 통과)→ SUBMITTING ─(증권사 접수)→ ACCEPTED �
 
 ### 3.10 프론트엔드 API
 
-- REST: `/api/v1/...`. Spring Boot 4의 API 버전 기능을 쓴다.
-- 실시간: 시세, 주문 상태, 체결 알림을 WebSocket(또는 SSE)으로 보낸다.
-- 화면: 로그인, 계좌 연결, 대시보드(잔고·손익), 종목 차트, 주문, 전략 목록·설정, 백테스트 결과, 리스크 설정, 킬 스위치.
+상세는 **[frontend.md](frontend.md)**.
+
+- Next.js 서버가 BFF다. 브라우저는 Next하고만 통신하고, Spring 호출은 모두 Next 서버가 한다. 같은 오리진이라 CORS가 필요 없다.
+- REST: `/api/v1/...`. Spring Boot 4의 API 버전 기능을 쓴다. Spring은 서비스 키로 Next 요청만 받는다(3.1).
+- 실시간: 시세, 주문 상태, 체결 알림을 SSE로 보낸다. Spring → Next 라우트 핸들러 → 브라우저.
+- 화면은 서버 컴포넌트로 만들고, 차트·실시간 가격·주문 폼만 클라이언트 컴포넌트로 둔다. 화면 목록과 마일스톤 매핑은 frontend.md.
 
 ### 3.11 해외·선물 지표 (global)
 
@@ -234,7 +238,7 @@ com.<base>
 ├── order/         주문, 체결, 상태 머신
 ├── portfolio/     보유, 원장, 손익
 ├── strategy/      전략, 실행, 백테스트
-├── risk/          리스크 규칙, 킬 스위치
+├── risk/          리스크 규칙, 자동 주문 켜기·끄기
 ├── reconciliation/
 └── config/        공통 Config (Dispatcher, Scope, Security, Jackson)
 ```
@@ -316,7 +320,6 @@ KIS가 주는 정보 ([open-trading-api](https://github.com/koreainvestment/open
 | 테이블 | 핵심 컬럼 |
 |---|---|
 | `users` | id, email, password_hash, role |
-| `refresh_tokens` | id, user_id, token_hash, expires_at, revoked_at |
 | `broker_accounts` | id, user_id, broker(`KIS`), environment(`PAPER`/`LIVE`), account_no_enc, app_key_enc, app_secret_enc, expires_on(모의) |
 | `instruments` | code, name, market(KOSPI/KOSDAQ), tick_size_rule, nxt_eligible |
 | `market_sessions` | venue(KRX/NXT), session, opens_at, closes_at, order_types |
@@ -328,7 +331,7 @@ KIS가 주는 정보 ([open-trading-api](https://github.com/koreainvestment/open
 | `cash_ledger` | id, account_id, amount, type(`DEPOSIT`/`BUY`/`SELL`/`FEE`/`TAX`/`ADJUST`), ref_id(끝난 주문 등), occurred_at. 끝난 주문은 유형별 1행, `UNIQUE(type, ref_id)`(`ADJUST` 제외) |
 | `strategies` / `strategy_runs` / `signals` | 전략 정의·파라미터, 실행 기록, 신호 |
 | 전략 운영 테이블 | `position_plans`, `plan_tranches`, `decisions`, `news_articles` 등 — [strategy.md](strategy.md) 18장 |
-| `risk_limits` | account_id, 규칙별 한도, kill_switch |
+| `risk_limits` | account_id, 규칙별 한도, auto_order_enabled |
 | `event_publication` | Spring Modulith 이벤트 발행 기록. 스키마는 Modulith가 정한다. DDL은 Flyway에 넣는다(제안) |
 | `candles` (hypertable) | instrument, venue(KRX/NXT/통합), interval, bucket_start, open, high, low, close, volume |
 | `global_series` | series_id(예: `US:NVDA`, `CME:ES`, `KRX:K200F-NIGHT`), source, kind(STOCK/FUTURE/MACRO), contract(월물, nullable), unit, timezone |
@@ -354,10 +357,10 @@ KIS가 주는 정보 ([open-trading-api](https://github.com/koreainvestment/open
 | 마일스톤 | 내용 | 완료 기준 |
 |---|---|---|
 | M0 | Claude 설정(`/kopring:init`, 거래 규칙, 훅), Gradle, Docker Compose, Flyway, 컨텍스트 로딩 테스트, ArchUnit, 뮤테이션 테스트(PIT, 변경분 실행). 설계: [m0-foundation.md](m0-foundation.md) | `./gradlew test` 통과(ArchUnit 포함), 훅 동작, `pitestChanged`가 샘플 도메인 클래스에서 동작 |
-| M1 | 인증(JWT + Refresh), 계좌 연결(암호화 저장), KIS 토큰 발급 | 프론트에서 로그인 후 모의 계좌 잔고 조회 |
+| M1 | Next 골격, 인증(Next 세션 + Spring 서비스 키), 계좌 연결(암호화 저장), KIS 토큰 발급 | 프론트에서 로그인 후 모의 계좌 잔고 조회 |
 | M2 | 종목 마스터, 시장·세션 캘린더, KRX Open API 일봉 백필, 분봉 수집, 실시간 시세 중계, 해외 일봉·지수 선물·KOSPI200 야간선물 수집 | 차트에 캔들 표시, 실시간 가격 갱신, 아침 07:00에 간밤 해외·야간선물 지표가 채워짐 |
 | M3 | 수동 주문, 상태 머신, 체결 수신, 포트폴리오·원장, 이벤트 발행 기록(Modulith) | 모의 계좌에서 매수 → 체결 → 잔고 반영 |
-| M4 | 대사, 리스크 규칙, 킬 스위치 | 일부러 상태를 어긋나게 한 뒤 대사로 복구 |
+| M4 | 대사, 리스크 규칙, 자동 주문 끄기, 미체결 주문 취소 | 일부러 상태를 어긋나게 한 뒤 대사로 복구 |
 | M5 | 아침 파이프라인, 시장 국면, 포지션 계획·사이징, 강제 청산, 뉴스 수집, jev 판단, 기준선 가상 장부 | 모의 계좌에서 자동매매 1주 무중단, 모든 판단이 `decisions`에 기록됨 |
 | M6 | 백테스트 | 같은 전략의 백테스트와 모의 운용 결과 비교 |
 | M7 | 실전 모드, 슬리피지 기록, NXT·시간외 주문 검증 | [strategy.md](strategy.md) 16.3 실전 전환 기준 통과 후 소액 운용, 실측 슬리피지가 백테스트 가정 이내 |
@@ -377,7 +380,8 @@ KIS가 주는 정보 ([open-trading-api](https://github.com/koreainvestment/open
 - [ ] 모의투자의 수수료·세금 계산 방식 (0.0142% / 0.20%로 알려짐)
 - [ ] 모의투자 체결 규칙 실측: 현재가보다 유리한 지정가가 즉시 체결되는지, 실제 체결량만큼만 체결되는지, 부분 체결과 체결통보가 오는지, 시간외 주문이 거부되는지
 - [ ] 모의투자 참가 기간 선택지, 재신청 시 계좌번호·API 키 변경 여부, 3개월 미접속 기준에 API 호출 포함 여부, KIS Developers 모의 API 키 유효기간
-- [ ] 프론트엔드 기술 (React/Vue 등)
+- [x] 프론트엔드 기술 — 2026-10-14 Next.js로 결정([frontend.md](frontend.md))
+- [ ] Next 세션 구현 방식, Node 버전·패키지 매니저, `bootRun`과 `next dev`를 함께 띄우는 방법, TradingView 출처 표기 방식 — [frontend.md](frontend.md)
 - [ ] 과거 캔들 데이터 출처: KIS 조회 API의 기간 제한, KRX Open API 이용 약관(개인 사용 조건)
 - [ ] KIS API의 NXT 시세 제공 여부, 주문 시 KRX/NXT/SOR 지정 방법, 모의투자에서 NXT·애프터마켓 지원 여부
 - [ ] KRX 애프터마켓 운영 시간과 대상 (2026년 개설 보도)
