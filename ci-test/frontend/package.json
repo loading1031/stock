@@ -1,0 +1,16 @@
+{
+  "name": "ci-frontend",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "scripts": {
+    "api:generate": "openapi-typescript ../../openapi/openapi.json --properties-required-by-default -o server/api/schema.d.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "~5.9.3"
+  }
+}

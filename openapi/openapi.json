@@ -1,0 +1,66 @@
+{
+  "components" : {
+    "schemas" : {
+      "Quote" : {
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "limitPrice" : {
+            "format" : "decimal",
+            "type" : [ "string", "null" ]
+          },
+          "memo" : {
+            "type" : [ "string", "null" ]
+          },
+          "price" : {
+            "format" : "decimal",
+            "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "info" : {
+    "title" : "OpenAPI definition",
+    "version" : "v0"
+  },
+  "openapi" : "3.1.0",
+  "paths" : {
+    "/api/v1/stocks/{code}" : {
+      "get" : {
+        "operationId" : "quote",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Quote"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "quote-controller" ]
+      }
+    }
+  },
+  "servers" : [ {
+    "description" : "Generated server url",
+    "url" : "http://localhost"
+  } ]
+}

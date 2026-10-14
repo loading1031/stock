@@ -1,0 +1,22 @@
+# 테스트 전용: Action이 만든 PR에서 CI가 도는지 확인
+name: 타입 검사 (테스트)
+on:
+  pull_request:
+    branches: [test/api-spec-ci]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: ci-test/frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: pnpm
+          cache-dependency-path: ci-test/frontend/pnpm-lock.yaml
+      - working-directory: ci-test/frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm typecheck
