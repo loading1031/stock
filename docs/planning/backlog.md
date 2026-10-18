@@ -10,7 +10,6 @@
 | 순서 | ID | 이슈 | 사용자 준비물 |
 |---|---|---|---|
 | 1 | B-02 KIS API 검증 | [#6](https://github.com/loading1031/stock/issues/6) | **KIS 모의투자 신청 + KIS Developers 모의 앱키 발급** |
-| 3 | B-24 프론트·백엔드 작업 나누기 | [#16](https://github.com/loading1031/stock/issues/16) | 없음 |
 | 아무 때나 | B-14 kopring 원본 정리 (claude-plugins 저장소에서) | [#7](https://github.com/loading1031/stock/issues/7) | A/B 선택 |
 | 아무 때나 | B-21 시각화 문서 동기화 | [#8](https://github.com/loading1031/stock/issues/8) | 없음 |
 
@@ -43,7 +42,6 @@ B-02는 준비물이 있어야 의미가 있다. 모의투자 신청은 미리 �
 
 | ID | 주제 | 브랜치 | 이슈 | 시작 |
 |---|---|---|---|---|
-| B-24 | 프론트·백엔드 작업 나누기 | `plan/B-24-work-split` | [#16](https://github.com/loading1031/stock/issues/16) | 2026-10-18 |
 
 ## 완료
 
@@ -54,6 +52,7 @@ B-02는 준비물이 있어야 의미가 있다. 모의투자 신청은 미리 �
 | B-03 | 프론트엔드 기술과 화면 목록 | [frontend.md](frontend.md), plan.md 2장·3.1·3.7·3.10·5장·7장, strategy.md 9.3·11.2, 용어 "자동 주문 끄기·미체결 주문 취소", 이슈 [#5](https://github.com/loading1031/stock/issues/5) | 2026-10-14 |
 | B-18 | 기획 관리를 GitHub 이슈로 | 작업지시서 = 이슈(라벨 `plan`), planning 0.5.0, CLAUDE.md "기획 진행 방식"·"Git", 이슈 [#4](https://github.com/loading1031/stock/issues/4) | 2026-10-14 |
 | B-23 | 화면 디자인 문서 | [design/index.html](../../design/index.html)(정보 구조, 화면 18개, 공통 UI), frontend.md "화면 설계", plan.md 3.6~3.9·5장, strategy.md 9.3·15·16.3·17, CLAUDE.md "디자인", 이슈 [#13](https://github.com/loading1031/stock/issues/13) | 2026-10-18 |
+| B-24 | 프론트·백엔드 작업 나누기 | M0·M1 코드 이슈 #17~#23(#16의 하위 이슈, Milestone M0·M1), plan.md 3.1·7장, m0-foundation.md PIT 기준 `dev...HEAD`, CLAUDE.md "결정된 사항", 이슈 [#16](https://github.com/loading1031/stock/issues/16) | 2026-10-19 |
 
 ## 동기화 빚
 
