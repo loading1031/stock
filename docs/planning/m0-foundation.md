@@ -91,7 +91,7 @@ pitest {
 ```
 
 - `pitestChanged` 태스크(plan.md 7장 M0 완료 기준): 아래를 계산해 `-PpitTargets`로 `pitest`를 부르는 Gradle 태스크다. 결정(2026-10-13).
-  - 비교 기준: 커밋하지 않은 변경 + `git diff main...HEAD`
+  - 비교 기준: 커밋하지 않은 변경 + `git diff dev...HEAD` (코드 브랜치는 `dev`에서 분기하므로. 2026-10-18 B-24에서 `main`을 고침)
   - 대상: 바뀐 main `.kt` 중 `domain`·`application/service` 패키지의 클래스. 테스트 파일만 바뀌면 `FooTest` → 같은 패키지의 `Foo`
   - 바뀐 클래스가 없으면 PIT를 건너뛰고 성공으로 끝낸다
 - 위 블록의 기본값 `com.loading1031.stock.*`는 `pitest`를 직접 부를 때만 쓴다.
@@ -136,7 +136,7 @@ ArchUnit으로 검사할 것:
 
 ### M0 구현 체크리스트
 
-M0 구현 세션은 코드 브랜치 `feat/M0-foundation`에서 이 순서로 한다. 버전은 위 "확인한 버전" 표.
+M0 구현 세션은 이슈 [#17](https://github.com/loading1031/stock/issues/17)의 코드 브랜치 `feat/17-foundation`에서 이 순서로 한다. 버전은 위 "확인한 버전" 표.
 
 **만들 파일**
 

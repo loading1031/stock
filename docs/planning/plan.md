@@ -40,7 +40,7 @@
 
 ### 3.1 인증 (auth)
 
-- 회원가입, 로그인, 로그아웃. 비밀번호는 BCrypt(또는 Argon2)로 해시한다.
+- 로그인, 로그아웃. 비밀번호는 BCrypt(또는 Argon2)로 해시한다. 혼자 쓰므로 회원가입 화면은 두지 않고 첫 계정은 Flyway나 설정으로 넣는다(2026-10-18, B-24).
 - **Next가 사용자 세션을 맡고, Spring은 Next만 믿는다**(2026-10-14 결정). Next가 비밀번호 확인을 Spring에 요청하고, 맞으면 암호화된 httpOnly 세션 쿠키를 발급한다. Spring은 서비스 키로 Next 요청인지 확인하고, 사용자 ID·권한은 Next가 넣는 헤더로 받는다. JWT·Refresh Token은 쓰지 않는다. 상세는 [frontend.md](frontend.md).
 - 권한: `USER`, `ADMIN`. 혼자 쓰더라도 실전 모드 전환 같은 위험한 작업은 `ADMIN`만 하게 나눠 둔다.
 
@@ -359,10 +359,12 @@ KIS가 주는 정보 ([open-trading-api](https://github.com/koreainvestment/open
 
 ## 7. 개발 순서
 
+코드 작업은 GitHub 이슈로 나눈다. 이슈 하나 = PR 하나가 Spring·Next·화면까지 동작하는 한 기능(세로 조각)을 끝내고, GitHub Milestone `M0`·`M1`… 에 묶는다. API 스펙 파일을 처음 만드는 일만 따로 먼저 둔다(2026-10-18, B-24, 상위 이슈 [#16](https://github.com/loading1031/stock/issues/16)).
+
 | 마일스톤 | 내용 | 완료 기준 |
 |---|---|---|
-| M0 | Claude 설정(`/kopring:init`, 거래 규칙, 훅), Gradle, Docker Compose, Flyway, 컨텍스트 로딩 테스트, ArchUnit, 뮤테이션 테스트(PIT, 변경분 실행). 설계: [m0-foundation.md](m0-foundation.md) | `./gradlew test` 통과(ArchUnit 포함), 훅 동작, `pitestChanged`가 샘플 도메인 클래스에서 동작 |
-| M1 | Next 골격, 인증(Next 세션 + Spring 서비스 키), 계좌 연결(암호화 저장), KIS 토큰 발급 | 프론트에서 로그인 후 모의 계좌 잔고 조회 |
+| M0 | Claude 설정(`/kopring:init`, 거래 규칙, 훅), Gradle, Docker Compose, Flyway, 컨텍스트 로딩 테스트, ArchUnit, 뮤테이션 테스트(PIT, 변경분 실행). 설계: [m0-foundation.md](m0-foundation.md) | `./gradlew test` 통과(ArchUnit 포함), 훅 동작, `pitestChanged`가 샘플 도메인 클래스에서 동작. 이슈 [#17](https://github.com/loading1031/stock/issues/17) |
+| M1 | Next 골격, 인증(Next 세션 + Spring 서비스 키), 계좌 연결(암호화 저장), KIS 토큰 발급 | 프론트에서 로그인 후 모의 계좌 잔고 조회. 이슈 #18 Next 골격 → #19 API 스펙 → #20 로그인 → #21 계좌 연결(B-10 선행) → #22 KIS 토큰(B-02 선행) → #23 대시보드 첫 판(B-02 선행). #17·#18은 함께 진행 가능 |
 | M2 | 종목 마스터, 시장·세션 캘린더, KRX Open API 일봉 백필, 분봉 수집, 실시간 시세 중계, 해외 일봉·지수 선물·KOSPI200 야간선물 수집 | 차트에 캔들 표시, 실시간 가격 갱신, 아침 07:00에 간밤 해외·야간선물 지표가 채워짐 |
 | M3 | 수동 주문, 상태 머신, 체결 수신, 포트폴리오·원장, 이벤트 발행 기록(Modulith) | 모의 계좌에서 매수 → 체결 → 잔고 반영 |
 | M4 | 대사, 리스크 규칙, 자동 주문 끄기, 미체결 주문 취소 | 일부러 상태를 어긋나게 한 뒤 대사로 복구 |
