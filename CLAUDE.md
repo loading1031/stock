@@ -77,7 +77,7 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 ## 디자인
 - design 플러그인을 따른다 (화면 작업 전 승인 기준의 화면·공통 UI를 읽고, 구현 커밋에 반영한 문서와 기준을 적는다)
 - 문서: design/index.html
-- 기준: 없음
+- 기준: 커밋 65bebcc (design/ 전체, 2026-10-18 사용자 확정. B-23 PR이 합쳐지면 머지 커밋으로 갱신)
 - 토큰 원본: 미정 (M1에서 `frontend/`의 `globals.css` 테마)
 - 컴포넌트 원본: 미정 (M1에서 `frontend/` UI 컴포넌트)
 - 카탈로그: 미정 (Storybook, M1에서 `frontend/`에 설정)
