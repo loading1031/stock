@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자동 주문 표시줄 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="auto-order-bar">
+<nav id="side"></nav>
+<main>
+<h1>자동 주문 표시줄</h1>
+<div class="meta">구현 전 설계 · 원본은 M1에서 <code>frontend/</code> 코드, 카탈로그는 Storybook(미정)</div>
+
+<p class="lead">모든 화면 위에 고정하는 띠로, 자동 주문이 켜졌는지와 꺼졌다면 왜 꺼졌는지, 이 화면의 계좌, 실시간 연결을 보인다. 켜기·끄기 하나로 구현한다(결정 2026-10-16).</p>
+
+<figure>
+<img src="../svg/comp-auto-order-bar.svg" alt="자동 주문 표시줄 변형 8가지: 켜짐, 꺼짐(사람이 끔), 꺼짐(리셋 판정), 오늘 신규 매수 건너뜀, 실시간 끊김, 실전 계좌 화면, M1~M3, 증권사 연결 실패">
+<figcaption>자동 주문 표시줄 · 변형 8가지</figcaption>
+</figure>
+
+<table>
+<thead><tr><th>변형</th><th>토글</th><th>띠</th><th>링크</th></tr></thead>
+<tbody>
+<tr><td>켜짐</td><td>켜짐</td><td>없음</td><td>—</td></tr>
+<tr><td>꺼짐 · 사람이 끔</td><td>꺼짐</td><td>위험: 강제 청산도 멈춤</td><td><a href="../screens/cancel-open.html">미체결 주문 취소</a></td></tr>
+<tr><td>꺼짐 · 리셋 판정</td><td>꺼짐(저절로)</td><td>위험: 확인한 뒤 다시 켬</td><td><a href="../screens/reconcile.html">대사 결과</a></td></tr>
+<tr><td>오늘 신규 매수 건너뜀</td><td>켜짐</td><td>경고: 이유(Ollama 장애·대사 불일치·일일 손실 한도·데이터 수집 실패)</td><td>이유에 맞는 화면</td></tr>
+<tr><td>실시간 끊김</td><td>그대로</td><td>없음. 값 옆에 받은 시각</td><td>—</td></tr>
+<tr><td>실전 계좌 화면(M7)</td><td>그대로</td><td>계좌 칸을 위험색으로</td><td>—</td></tr>
+<tr><td>M1~M3</td><td>없음(M4부터)</td><td>없음</td><td>—</td></tr>
+<tr><td>증권사 연결 실패(토큰 발급 실패)</td><td>켜짐 · 주문 불가</td><td>위험: 주문과 강제 청산이 모두 나가지 않음</td><td><a href="../screens/account.html">계좌 연결</a></td></tr>
+</tbody>
+</table>
+
+<ul>
+<li>끄기·켜기는 <a href="confirm-dialog.html">확인 대화상자</a>를 거친다. 다시 켤 때는 켜지는 즉시 나갈 강제 청산 목록을 보인다(frontend.md 제안)</li>
+<li>M1은 실시간 시세가 없어 연결 자리에 "시세: 조회만"을 보인다. M2부터 실시간 연결 상태를 보인다</li>
+<li>끈 시각은 표시줄에 "hh:mm에 끔"으로 보인다. 변형 8(증권사 연결 실패)과 데이터 수집 실패 이유는 2026-10-18 결정으로 더했다</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

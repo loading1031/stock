@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로그인 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="login">
+<nav id="side"></nav>
+<main>
+<h1>로그인</h1>
+<div class="meta">M1 · 메뉴 밖 · <span class="tag">확정</span> · 진입: 첫 접속, 세션 만료 · 다음: 계좌 연결(계좌가 없을 때), 대시보드</div>
+
+<p class="lead">이메일과 비밀번호로 로그인하고, Next가 암호화된 httpOnly 세션 쿠키를 발급한다.</p>
+
+<figure>
+<img src="../svg/login.svg" alt="로그인 화면 와이어프레임: 화면 틀 없이 가운데 카드에 이메일·비밀번호 입력 칸, 실패 메시지 자리, 로그인 버튼">
+<figcaption>로그인 · 이메일·비밀번호 입력, 실패 메시지 자리, 로그인 버튼</figcaption>
+</figure>
+
+<p>로그인 전 화면이라 화면 틀(표시줄·메뉴) 없이 가운데 카드 하나에 입력 칸 둘, 실패 메시지 자리, 로그인 버튼만 둔다.</p>
+
+<p>로그인하면 계좌가 없을 때 <a href="../screens/account.html">계좌 연결</a>로, 있을 때 <a href="../screens/dashboard-first.html">대시보드</a>로 간다. 세션 만료로 온 경우에는 원래 화면으로 돌아간다.</p>
+
+<h2>쓰는 공통 UI</h2>
+<p>없음. <a href="../components/shell.html">화면 틀</a>을 쓰지 않는 유일한 화면이다.</p>
+
+<h2>상태</h2>
+<table>
+<thead><tr><th>상태</th><th>보일 것</th></tr></thead>
+<tbody>
+<tr><td>처음</td><td>빈 입력 칸 둘과 로그인 버튼. 메시지 자리는 숨김</td></tr>
+<tr><td>확인 중</td><td>로그인 버튼 비활성 + "확인 중". 두 번 제출을 막는다</td></tr>
+<tr><td>이메일·비밀번호 틀림</td><td>메시지 자리에 "이메일 또는 비밀번호가 맞지 않습니다"(문구 가정)</td></tr>
+<tr><td>서버 무응답</td><td>Spring이 응답하지 않음. 틀림과 다른 문구 "서버에 연결할 수 없습니다"(문구 가정), 입력값은 남긴다</td></tr>
+<tr><td>세션 만료로 돌아옴</td><td>카드 위 안내 "세션이 끝났습니다. 다시 로그인하세요"(문구 가정). 로그인하면 원래 화면으로</td></tr>
+<tr><td>성공</td><td>계좌가 없으면 <a href="../screens/account.html">계좌 연결</a>, 있으면 <a href="../screens/dashboard-first.html">대시보드</a></td></tr>
+</tbody>
+</table>
+
+<h2>화면 규칙</h2>
+<ul>
+<li>보여 줄 것: 이메일, 비밀번호, 로그인 버튼, 실패 메시지</li>
+<li>데이터: KIS 데이터 없음. 비밀번호 확인은 Next가 Spring에 요청한다</li>
+<li>주의: 로그인 시도 제한은 두지 않는다(127.0.0.1 전용)</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

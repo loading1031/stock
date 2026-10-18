@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>미체결 주문 취소 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="cancel-open">
+<nav id="side"></nav>
+<main>
+<h1>미체결 주문 취소</h1>
+<div class="meta">M4 · 메뉴: 매매 · <span class="tag">확정</span> · 진입: 매매 메뉴, <a href="../components/auto-order-bar.html">자동 주문 표시줄</a> 변형 2의 "미체결 주문 취소 ▸" · 다음: <a href="../screens/auto-order.html">자동 주문 켜기·끄기</a>, <a href="../screens/dashboard-ledger.html">대시보드</a></div>
+
+<p class="lead">고른 종목·방향(매수/매도)의 미체결만 취소한다.</p>
+
+<figure>
+<img src="../svg/cancel-open.svg" alt="미체결 주문 취소 화면 와이어프레임: 미체결이 있는 종목의 매수·매도 체크, 취소될 주문 미리보기, 강제 청산 경고, 실행 결과">
+<figcaption>미체결 주문 취소 · 종목별 매수/매도 체크 + 취소될 주문 미리보기</figcaption>
+</figure>
+
+<p>왼쪽에서 종목·방향을 고르면 오른쪽에 취소될 주문이 주문 단위로 묶여 나오고(펼치면 번호별, 이번에 취소할 번호만 강조), 목록과 미리보기에 낸 쪽(수동·전략·강제 청산·회차)을 보이며, 그때서야 실행 버튼이 켜진다.</p>
+
+<p>실행 버튼은 <a href="../components/confirm-dialog.html">확인 대화상자</a>의 취소 행(번호별 취소 수량, 낸 쪽)을 연다. 강제 청산 매도를 고르면 손절 주문이 사라진다는 경고를 띄운다. 실행하면 번호마다 취소를 차례로 보내고(모의 초당 2건 한도), 결과 영역에 번호별 완료·실패·확인 중과 취소 직전 체결로 줄어든 수량을 보인다. 미리보기는 기준 시각과 출처(통보 누계)를 보이고 실행 직전에 다시 읽는다. 그림의 20620·22608 취소와 결과는 가상 예시다. 실측에서는 두 번호 모두 체결됐다. 표시줄은 업무 흐름 3(자동 주문 끄기 → 미체결 주문 취소)에 맞춰 변형 2로 뒀다. 변형 2의 "미체결 주문 취소 ▸" 링크가 이 화면으로 온다.</p>
+
+<h2>쓰는 공통 UI</h2>
+<p><a href="../components/shell.html">화면 틀</a> · <a href="../components/auto-order-bar.html">자동 주문 표시줄</a> (변형 2, 켜진 때 변형 1) · <a href="../components/confirm-dialog.html">확인 대화상자</a> (취소 행) · <a href="../components/status-names.html">상태 표시명</a> (주문) · <a href="../components/order-chain-row.html">주문 체인 행</a></p>
+
+<h2>상태</h2>
+<table>
+<thead><tr><th>상태</th><th>보일 것</th></tr></thead>
+<tbody>
+<tr><td>처음 (아무것도 안 고름)</td><td>미리보기 "고른 것이 없어 0건", 실행 버튼 비활성</td></tr>
+<tr><td>미체결 없음</td><td>"취소할 미체결이 없다" 한 줄, 실행 버튼 없음</td></tr>
+<tr><td>불러오는 중</td><td>종목 목록 자리에 뼈대, 체크 칸 비활성</td></tr>
+<tr><td>조회 오류</td><td>마지막 목록을 흐리게 두고 오류 한 줄 + 다시 시도, 실행 버튼 비활성</td></tr>
+<tr><td>보내는 중 (번호 없음)</td><td>미리보기에 보이되 고를 수 없음, "번호가 생기면 취소 가능"</td></tr>
+<tr><td>확인 중 (UNKNOWN)</td><td>경고색 배지, 취소 불가. 조회로 확정된 뒤 다시 고른다</td></tr>
+<tr><td>이미 취소 중인 번호</td><td>"취소 중" 표시, 다시 보내지 않는다</td></tr>
+<tr><td>장 마감 뒤 소멸 미확인 잔량</td><td>"소멸 확인 전" 표시, 취소 대상에서 뺀다(가정)</td></tr>
+<tr><td>실시간 끊김</td><td>표시줄 변형 5 + 미리보기 출처가 "조회"로 바뀌고 기준 시각을 보인다</td></tr>
+<tr><td>실행 중</td><td>번호별 진행 n/N 전송, 체크 칸 잠금</td></tr>
+<tr><td>일부 실패·응답 없음</td><td>결과에 실패(KIS 메시지)·확인 중, 남은 번호 다시 고르기</td></tr>
+<tr><td>자동 주문 켜짐</td><td>표시줄 변형 1 + "미리보기 뒤에 낸 주문은 포함 안 됨"</td></tr>
+</tbody>
+</table>
+
+<h2>화면 규칙</h2>
+<ul>
+<li>흐름: 미체결이 있는 종목을 보여 주되 아무것도 미리 체크하지 않는다 → 고른다 → 취소될 주문 목록을 보여 주고 확인받는다</li>
+<li>주의: 일괄 취소 버튼은 없다. 정정 체인은 번호마다 취소가 따로 나간다. 취소는 그 번호의 잔량만 취소한다</li>
+</ul>
+
+<h2>정할 것</h2>
+<ul class="todo">
+<li class="done">취소될 목록을 주문 단위로 묶을지: 주문 단위로 묶고 펼치면 번호별로 보인다(결정 2026-10-16)</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

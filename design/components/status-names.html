@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>상태 표시명 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="status-names">
+<nav id="side"></nav>
+<main>
+<h1>상태 표시명</h1>
+<div class="meta">구현 전 설계 · 원본은 M1에서 <code>frontend/</code> 코드, 카탈로그는 Storybook(미정)</div>
+
+<p class="lead">화면에는 한글 표시명을 쓰고, 코드 값은 상세에서만 보인다. 같은 상태는 모든 화면에서 같은 이름이다. 표시명은 제안이다.</p>
+
+<h3>주문 (plan.md 3.4)</h3>
+<table>
+<thead><tr><th>코드</th><th>표시명</th><th>비고</th></tr></thead>
+<tbody>
+<tr><td><code>CREATED</code></td><td>보내기 전</td><td></td></tr>
+<tr><td><code>SUBMITTING</code></td><td>보내는 중</td><td>번호 없음</td></tr>
+<tr><td><code>ACCEPTED</code></td><td>미체결</td><td></td></tr>
+<tr><td><code>PARTIALLY_FILLED</code></td><td>부분 체결</td><td></td></tr>
+<tr><td><code>FILLED</code></td><td>체결 완료</td><td></td></tr>
+<tr><td><code>CANCELLED</code></td><td>취소</td><td>일부 체결 뒤면 "부분 체결 후 취소"</td></tr>
+<tr><td><code>REJECTED</code></td><td>거부</td><td>리스크 검사</td></tr>
+<tr><td><code>FAILED</code></td><td>전송 실패</td><td></td></tr>
+<tr><td><code>UNKNOWN</code></td><td>확인 중</td><td>조회로 확정할 때까지 같은 주문을 다시 내지 않는다</td></tr>
+<tr><td>(미확인)</td><td>장 마감 소멸</td><td>KIS 통보 여부는 B-02에서 확인 중</td></tr>
+</tbody>
+</table>
+
+<h3>전략 (plan.md 3.6)</h3>
+<table>
+<thead><tr><th>코드</th><th>표시명</th></tr></thead>
+<tbody>
+<tr><td><code>DRAFT</code></td><td>초안</td></tr>
+<tr><td><code>BACKTESTED</code></td><td>백테스트 완료</td></tr>
+<tr><td><code>PAPER_RUNNING</code></td><td>모의 운용</td></tr>
+<tr><td><code>PAUSED</code></td><td>멈춤 (2026-10-16 추가)</td></tr>
+<tr><td><code>LIVE_RUNNING</code></td><td>실전 운용</td></tr>
+</tbody>
+</table>
+
+<h3>포지션 계획 (strategy.md)</h3>
+<table>
+<thead><tr><th>코드</th><th>표시명</th></tr></thead>
+<tbody>
+<tr><td><code>PLANNED</code></td><td>계획됨</td></tr>
+<tr><td><code>ACCUMULATING</code></td><td>매수 중</td></tr>
+<tr><td><code>HOLDING</code></td><td>보유</td></tr>
+<tr><td><code>EXITING</code></td><td>매도 중</td></tr>
+<tr><td><code>CLOSED</code></td><td>끝남</td></tr>
+<tr><td><code>CANCELLED</code></td><td>취소</td></tr>
+</tbody>
+</table>
+<p>회차는 대기 → 주문 나감 → 체결, 그 밖에 보류·취소다.</p>
+
+<h3>금액 원장</h3>
+<table>
+<thead><tr><th>코드</th><th>표시명</th></tr></thead>
+<tbody>
+<tr><td><code>DEPOSIT</code></td><td>입금</td></tr>
+<tr><td><code>BUY</code></td><td>매수 대금</td></tr>
+<tr><td><code>SELL</code></td><td>매도 대금</td></tr>
+<tr><td><code>FEE</code>·<code>TAX</code></td><td>제비용(추정)</td></tr>
+<tr><td><code>ADJUST</code></td><td>보정</td></tr>
+</tbody>
+</table>
+
+<h3>종목·시장 (2026-10-18 추가)</h3>
+<table>
+<thead><tr><th>표시명</th><th>보일 곳과 동작</th></tr></thead>
+<tbody>
+<tr><td>거래정지</td><td>종목 옆 배지. 주문 폼을 막는다</td></tr>
+<tr><td>상장폐지</td><td>관심 종목·보유에서 흐리게, 주문을 막는다</td></tr>
+<tr><td>휴장</td><td>그 시장이 쉬는 날. 값 옆에 "휴장 · 전 거래일 값"</td></tr>
+</tbody>
+</table>
+
+<ul>
+<li>"끝남"은 포지션 계획에만 쓰고 주문에는 쓰지 않는다</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

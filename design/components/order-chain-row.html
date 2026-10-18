@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주문 체인 행 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="order-chain-row">
+<nav id="side"></nav>
+<main>
+<h1>주문 체인 행</h1>
+<div class="meta">구현 전 설계 · 원본은 M1에서 <code>frontend/</code> 코드, 카탈로그는 Storybook(미정)</div>
+
+<p class="lead">주문 한 건을 한 행으로 보이고, 펼치면 정정·취소로 생긴 번호를 원주문번호(<code>OODER_NO</code>)를 따라 나무로 보인다. 쓰는 화면: <a href="../screens/order.html">주문</a>, <a href="../screens/cancel-open.html">미체결 주문 취소</a>.</p>
+
+<figure>
+<img src="../svg/comp-order-chain-row.svg" alt="주문 체인 행 펼친 모양: B-02 실측 SH에너지화학 지정가 매수 500주, 번호 5개(25085, 25105, 25234, 25204, 25251)와 합계 검사">
+<figcaption>주문 체인 행 · 펼친 모양, 번호 5개</figcaption>
+</figure>
+
+<ul>
+<li>접힌 행의 수량은 체인 합계다: 체결 합, 취소 합, 잔량 합</li>
+<li>정정 전에 체결된 수량은 원래 번호에 남는다(25085의 6주)</li>
+<li>취소는 그 번호의 남은 수량만 취소한다. 떼어 낸 번호(25204)는 영향을 받지 않는다</li>
+<li>합계 검사가 맞지 않으면 일별 조회로 바로잡고, 그동안 경고색으로 보인다(제안)</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

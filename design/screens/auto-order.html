@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>자동 주문 켜기·끄기 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="auto-order">
+<nav id="side"></nav>
+<main>
+<h1>자동 주문 켜기·끄기</h1>
+<div class="meta">M4 · 메뉴: 없음(모든 화면 위 표시줄에서 연다) · <span class="tag">확정</span> · 진입: 표시줄의 토글 · 다음: <a href="../screens/cancel-open.html">미체결 주문 취소</a></div>
+
+<p class="lead">모든 화면 상단에 고정된 토글과 현재 상태.</p>
+
+<figure>
+<img src="../svg/auto-order.svg" alt="자동 주문 켜기·끄기 와이어프레임: 끄기 확인 대화상자(막히는 것·그대로인 것)와 다시 켜기 확인 대화상자(나갈 강제 청산 목록)">
+<figcaption>자동 주문 켜기·끄기 · 끄기 확인(막히는 것·그대로인 것), 다시 켜기 확인(나갈 강제 청산 목록)</figcaption>
+</figure>
+
+<p>표시줄은 컴포넌트가 맡고, 그림은 켜짐에서 여는 끄기 확인(막히는 것·그대로인 것)과 꺼짐에서 다시 켤 때(나갈 강제 청산 목록 확인) 대화상자 두 개를 그렸다.</p>
+
+<p>끄기와 켜기 모두 <a href="../components/confirm-dialog.html">확인 대화상자</a>(경고)를 거친다. 리셋 판정의 멈춤은 자동 주문 끄기와 같고(변형 3), 신규 매수 건너뜀은 끄기와 별개다(변형 4, 결정 2026-10-16). 다시 켤 때 목록의 주문 방식은 자리만 두고, 청산 조건 종류는 strategy.md 11장(M5)에서 정한다.</p>
+
+<h2>쓰는 공통 UI</h2>
+<p><a href="../components/shell.html">화면 틀</a> · <a href="../components/auto-order-bar.html">자동 주문 표시줄</a> (변형 1~5) · <a href="../components/confirm-dialog.html">확인 대화상자</a> (자동 주문 끄기·켜기)</p>
+
+<h2>상태</h2>
+<table>
+<thead><tr><th>상태</th><th>보일 것</th></tr></thead>
+<tbody>
+<tr><td>끄기 처리 중</td><td>토글 잠금, "끄는 중"</td></tr>
+<tr><td>끄기 실패</td><td>토글은 켜짐 그대로, "꺼지지 않았다" 오류와 다시 시도</td></tr>
+<tr><td>켜기 처리 중</td><td>토글 잠금, "켜는 중"</td></tr>
+<tr><td>켜기 실패</td><td>꺼짐 그대로, 오류 문구</td></tr>
+<tr><td>강제 청산 목록 계산 실패</td><td>켜기 버튼 막음(제안), 이유와 다시 계산</td></tr>
+<tr><td>나갈 강제 청산 없음</td><td>"나갈 강제 청산 없음" (가정)</td></tr>
+<tr><td>확인 사이 목록이 바뀜</td><td>켜는 순간 다시 계산해 다르면 다시 확인 (제안)</td></tr>
+<tr><td>실시간 끊김</td><td>표시줄 변형 5, 상태를 받은 시각</td></tr>
+<tr><td>리셋 판정으로 꺼짐</td><td>표시줄 변형 3, 다시 켜기는 <a href="../screens/reconcile.html">대사 결과</a>의 확인 대화상자에서</td></tr>
+</tbody>
+</table>
+
+<h2>화면 규칙</h2>
+<ul>
+<li>끄면: 강제 청산을 포함한 새 자동 주문이 나가지 않는다. 낸 주문과 보유 종목은 그대로다. 수동 주문은 한 번 더 확인받는다</li>
+<li>꺼진 동안: "강제 청산도 멈춤 — 손절 보호 없음" 경고는 표시줄 변형 2가 모든 화면에 보인다</li>
+<li>켤 때: 켜지는 즉시 나갈 강제 청산 주문 목록을 보여 주고 확인받는다(제안)</li>
+<li>데이터: <code>risk_limits.auto_order_enabled</code></li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>확인 대화상자 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="confirm-dialog">
+<nav id="side"></nav>
+<main>
+<h1>확인 대화상자</h1>
+<div class="meta">구현 전 설계 · 원본은 M1에서 <code>frontend/</code> 코드, 카탈로그는 Storybook(미정)</div>
+
+<p class="lead">되돌릴 수 없는 동작은 모두 이 대화상자를 거친다. 무엇에 어떤 결과가 나는지 요약해 보이고, 기본 초점은 취소에 둔다.</p>
+
+<figure>
+<img src="../svg/comp-confirm-dialog.svg" alt="확인 대화상자 예시 두 가지: 매수 주문 확인(자동 주문 꺼짐일 때만 경고 줄), 리스크 한도 변경 확인(느슨해짐·조여짐 표시). 기본 초점은 취소">
+<figcaption>확인 대화상자 · 매수 주문, 리스크 한도 변경</figcaption>
+</figure>
+
+<table>
+<thead><tr><th>동작</th><th>요약에 보일 것</th><th>실행 버튼</th></tr></thead>
+<tbody>
+<tr><td>매수·매도 주문</td><td>계좌, 종목, 방향·방식·시장, 가격 × 수량, 묶을 금액 또는 수량</td><td>매수 빨강 / 매도 파랑</td></tr>
+<tr><td>자동 주문이 꺼진 동안의 수동 주문</td><td>위 주문 요약 + "자동 주문 꺼짐" 경고 줄. 실행 버튼 문구는 "꺼진 상태에서 보내기"</td><td>경고</td></tr>
+<tr><td>정정</td><td>대상 번호, 바뀌는 가격·수량, 새 번호가 생긴다는 안내</td><td>기본</td></tr>
+<tr><td>취소, 미체결 주문 취소 실행</td><td>번호별 취소 수량, 낸 쪽(수동·전략·강제 청산)</td><td>경고</td></tr>
+<tr><td>자동 주문 끄기</td><td>막히는 것(강제 청산 포함)과 그대로인 것</td><td>경고</td></tr>
+<tr><td>자동 주문 켜기</td><td>켜지는 즉시 나갈 강제 청산 목록</td><td>경고</td></tr>
+<tr><td>계좌 등록</td><td>환경·종류·계좌번호 끝 2자리, 등록 뒤 환경을 못 바꾼다는 안내</td><td>기본</td></tr>
+<tr><td>리스크 한도 저장</td><td>바뀌는 값의 지금 → 새 값, 느슨해짐·조여짐. 조이기만 해도 확인한다</td><td>느슨해지면 경고</td></tr>
+<tr><td>전략 파라미터 저장</td><td>바뀌는 값, 적용 시점(다음 거래일 07:00)</td><td>기본</td></tr>
+<tr><td>전략 상태 전환·멈춤</td><td>지금 상태 → 새 상태, 새 주문이 나가는지</td><td>경고</td></tr>
+<tr><td>리셋 판정 뒤 다시 켜기</td><td>닫히는 포지션 계획, 새 성과 구간</td><td>경고</td></tr>
+<tr><td>실전 전환 (M7)</td><td>점검표 결과, 실전 계좌, 리스크 한도, 계좌번호 끝자리 입력. 자동 주문 꺼짐·리셋 판정 중에는 열지 않는다</td><td>위험</td></tr>
+</tbody>
+</table>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

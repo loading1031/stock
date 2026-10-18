@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>화면 틀 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="shell">
+<nav id="side"></nav>
+<main>
+<h1>화면 틀</h1>
+<div class="meta">구현 전 설계 · 원본은 M1에서 <code>frontend/</code> 코드, 카탈로그는 Storybook(미정)</div>
+
+<p class="lead">로그인을 뺀 모든 화면은 위에 자동 주문 표시줄, 왼쪽에 메뉴, 오른쪽에 화면 제목과 본문을 둔다. 메뉴 묶음은 <a href="../index.html#ia">개요의 정보 구조</a>를 따른다.</p>
+
+<figure>
+<img src="../svg/comp-shell.svg" alt="화면 틀: 위 자동 주문 표시줄, 왼쪽 메뉴 여섯 묶음, 오른쪽 화면 제목·앞뒤 화면 링크·본문. 예시는 주문 화면을 연 모습">
+<figcaption>화면 틀 · 표시줄, 왼쪽 메뉴, 제목과 링크, 본문</figcaption>
+</figure>
+
+<ul>
+<li>현재 화면은 메뉴에서 강조한다</li>
+<li>제목 줄 오른쪽에 업무 흐름의 앞뒤 화면으로 가는 링크를 둔다</li>
+<li>쓰는 화면: <a href="../screens/login.html">로그인</a>을 뺀 17개</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

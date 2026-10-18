@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>리스크 설정 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="risk">
+<nav id="side"></nav>
+<main>
+<h1>리스크 설정</h1>
+<div class="meta">M4 · 메뉴: 관리 · <span class="tag">확정</span> · 진입: 관리 메뉴 · 다음: <a href="../screens/strategies.html">전략 목록·설정</a>(전략별 값)</div>
+
+<p class="lead">계좌 단위 한도 값을 편집한다.</p>
+
+<figure>
+<img src="../svg/risk.svg" alt="리스크 설정 화면 와이어프레임: 계좌 단위 한도 폼, 오늘 손실 현황, 호출 빈도 정보, 확인 뒤 저장">
+<figcaption>리스크 설정 · 계좌 단위 한도 폼, 오늘 손실 현황, 호출 빈도 정보, 확인 뒤 저장</figcaption>
+</figure>
+
+<p>한도 값은 plan.md 예시값이고, 계좌는 고르지 않고 이름만 보이며(주식 모의 계좌), 프리·애프터마켓은 <a href="../screens/strategies.html">전략 목록·설정</a>에서 켜고, 호출 빈도는 편집하지 않는 정보로만 둔다.</p>
+
+<p>저장은 <a href="../components/confirm-dialog.html">확인 대화상자</a>(지금 → 새 값)를 거치고 느슨해지는 항목은 경고색으로 보이며, 다음 주문부터 적용한다(가정). 일일 손실 한도를 넘으면 그날 신규 매수만 건너뛰고(표시줄 변형 4) 토글은 켜진 채다. 전략별 값은 <a href="../screens/strategies.html">전략 화면</a>에 둔다.</p>
+
+<h2>쓰는 공통 UI</h2>
+<p><a href="../components/shell.html">화면 틀</a> · <a href="../components/auto-order-bar.html">자동 주문 표시줄</a> (변형 1, 4) · <a href="../components/confirm-dialog.html">확인 대화상자</a> (리스크 한도 저장)</p>
+
+<h2>상태</h2>
+<table>
+<thead><tr><th>상태</th><th>보일 것</th></tr></thead>
+<tbody>
+<tr><td>불러오는 중</td><td>값 칸에 자리 표시, 저장 비활성</td></tr>
+<tr><td>불러오기 실패</td><td>오류 문구와 다시 시도, 저장 비활성</td></tr>
+<tr><td>바뀐 값 없음</td><td>저장 비활성</td></tr>
+<tr><td>입력 검증 오류</td><td>0·음수, 비중 100% 초과, 일일 손실 한도 빈 값은 칸 아래 오류 문구, 저장 막음</td></tr>
+<tr><td>확인 대화상자</td><td>바뀐 항목의 지금 → 새 값, 느슨해지는 항목은 경고색</td></tr>
+<tr><td>저장 중</td><td>저장 버튼 잠금</td></tr>
+<tr><td>저장 실패</td><td>입력한 값은 남기고, 한도는 바뀌지 않았다고 알림</td></tr>
+<tr><td>저장 완료</td><td>마지막 변경 시각 갱신, "다음 주문부터 적용 (가정)"</td></tr>
+<tr><td>일일 손실 한도 넘음</td><td>오늘 손실 자리에 "넘음 · 오늘 신규 매수 건너뜀", 표시줄 변형 4</td></tr>
+</tbody>
+</table>
+
+<h2>화면 규칙</h2>
+<ul>
+<li>보여 줄 것: 종목당 최대 비중, 주문당 최대 금액, 일일 손실 한도, 거래 가능 시간, 미수 금지(제안)</li>
+<li>데이터: <code>risk_limits</code></li>
+<li>주의: 모의 계좌는 프리·애프터마켓 자동 주문을 켤 수 없다. 호출 빈도(초당 2건)는 편집 대상이 아니다</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

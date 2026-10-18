@@ -11,6 +11,7 @@
 | `docs/planning/plan.md` | 전체 기획: 기능, 아키텍처, 데이터 모델, 마일스톤(M0~M7), 확인 필요 항목 |
 | `docs/planning/m0-foundation.md` | M0 설계: 실측 버전, 실험 결과, 빌드·구조·이벤트 결정 (B-01) |
 | `docs/planning/frontend.md` | 프론트엔드: Next.js BFF, 인증(Next 세션 + 서비스 키), SSE, 차트, 화면 목록, 자동 주문 끄기·미체결 주문 취소 (B-03) |
+| `design/index.html` | 화면 설계: 정보 구조, 업무 흐름, 화면 18개의 와이어프레임(SVG)·상태·규칙, 공통 UI 설계 (B-23). 브라우저로 바로 연다 |
 | `.claude/rules/frontend.md` | 프론트엔드 프로젝트 전용 규칙(BFF, SSE, 차트, 주문 화면). `frontend/` 파일 작업 때만 적용. 범용 규칙은 `nextts` 플러그인 |
 | `docs/planning/strategy.md` | 운영 전략: 워크플로(Mermaid), jev 배치, 위험 예산, 포지션 계획, 매도, 교체 매매, 평가 |
 | `docs/planning/backlog.md` | 다음에 기획할 후보 목록 |
@@ -67,11 +68,20 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 | 기능 경계 | 다른 기능은 `adapter/out`(상대 `application/service` 호출)과 이벤트 리스너(상대 `domain/event` 수신)에서만 참조. 순환 금지. ArchUnit으로 검사 |
 | 영속성 | JPA + Kotlin JDSL. 시계열만 `JdbcClient` + SQL (명시적 예외, 일괄 삽입은 `NamedParameterJdbcTemplate`) |
 | 모듈 간 소통 | Spring 내부 이벤트 + Spring Modulith 이벤트 발행 기록(Postgres). Kafka·Redis·R2DBC는 쓰지 않음 |
-| 프론트엔드 | Next.js(App Router, 서버 컴포넌트)를 BFF로, TypeScript + pnpm + Turbopack(Next 기본 번들러) + React Compiler(`useMemo`·`useCallback`·`React.memo`는 쓰지 않고 컴파일러에 맡김), 같은 저장소 `frontend/`. shadcn/ui, 차트는 Lightweight Charts(캔들·실시간) + Recharts(성과). 실시간은 SSE. Next가 사용자 세션을 맡고 Spring은 서비스 키로 Next 요청만 받음(JWT·Refresh 없음). `docs/planning/frontend.md` |
+| 프론트엔드 | Next.js(App Router, 서버 컴포넌트)를 BFF로, TypeScript + pnpm + Turbopack(Next 기본 번들러) + React Compiler(`useMemo`·`useCallback`·`React.memo`는 쓰지 않고 컴파일러에 맡김), 같은 저장소 `frontend/`. shadcn/ui, 차트는 Lightweight Charts(캔들·실시간) + Recharts(성과). 실시간은 SSE. Next가 사용자 세션을 맡고 Spring은 서비스 키로 Next 요청만 받음(JWT·Refresh 없음). 컴포넌트 카탈로그는 Storybook. 화면 설계는 `design/`. `docs/planning/frontend.md` |
 | 증권사·데이터 | KIS Open API (주문, 국내·해외 시세, 선물). 과거 일봉 백필은 KRX Open API |
 | 판단 모델 | Ollama 결정 모델 jev(`nimble`). 판단만, 숫자는 코드, 한도는 규칙 |
 | 테스트 | JUnit 6, 뮤테이션 테스트 PIT(`domain`·`application/service`, 변경분은 `git diff`로 대상 지정, 기준선 없음), ArchUnit |
 | 로컬 실행 | Docker Compose는 TimescaleDB만(`2.26.1-pg18`, `127.0.0.1`), Ollama는 Mac에서 직접. Flyway 계정과 앱 계정 분리 |
+
+## 디자인
+- design 플러그인을 따른다 (화면 작업 전 승인 기준의 화면·공통 UI를 읽고, 구현 커밋에 반영한 문서와 기준을 적는다)
+- 문서: design/index.html
+- 기준: 없음
+- 토큰 원본: 미정 (M1에서 `frontend/`의 `globals.css` 테마)
+- 컴포넌트 원본: 미정 (M1에서 `frontend/` UI 컴포넌트)
+- 카탈로그: 미정 (Storybook, M1에서 `frontend/`에 설정)
+- 참고: 초안 단계의 Claude Docs 문서(https://claude.ai/code/artifact/20787e60-e73b-4882-a499-e5ac505550e5)와 그 검토 댓글. 원본은 `design/`이다
 
 ## 플러그인
 
@@ -81,6 +91,8 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 |---|---|
 | `planning` | 기획 진행 (`/planning:backlog` → `spec` → `commit` → `done`, `handoff`). git 명령 검사 훅(add -A, 커밋 접두어·Refs, 금지어) |
 | `kopring` | Kotlin + Spring 컨벤션. `.kt` 작업 시 규칙 자동 적용, 편집 전 검사 훅 |
+| `design` | 화면 설계 문서(`design/`)와 코드·카탈로그 연결 규약. 승인 기준은 Git 커밋 |
+| `nextts` | Next.js + TypeScript 범용 규칙. `frontend/` 작업 때 적용 |
 
 플러그인 자체를 고칠 때는 마켓플레이스 저장소에서 고친다. 이 저장소에 규칙·명령을 복사하지 않는다. 고친 뒤 GitHub에 push하면 반영된다. 플러그인에 버전 번호가 없어 커밋이 곧 버전이고, `.claude/settings.json`의 `extraKnownMarketplaces`에 `autoUpdate: true`를 켜 두어 세션 시작 후 백그라운드로 받는다(다음 실행 또는 `/reload-plugins`에 적용). 바로 받으려면 `claude plugin marketplace update loading1031-plugins && claude plugin update planning@loading1031-plugins`. 로컬 폴더를 고치는 것만으로는 적용되지 않는다.
 

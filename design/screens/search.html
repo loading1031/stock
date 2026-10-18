@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>종목 검색·관심 종목 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="search">
+<nav id="side"></nav>
+<main>
+<h1>종목 검색·관심 종목</h1>
+<div class="meta">M2 · 메뉴: 시장 · <span class="tag">확정</span> · 진입: 시장 메뉴 · 다음: <a href="../screens/chart.html">종목 차트</a></div>
+
+<p class="lead">종목 마스터를 검색하고 관심 종목을 관리한다.</p>
+
+<figure>
+<img src="../svg/search.svg" alt="종목 검색·관심 종목 화면 와이어프레임: 왼쪽 종목 검색 결과 목록, 오른쪽 관심 종목 목록, + 추가로 관심 종목에 쌓이는 흐름">
+<figcaption>종목 검색·관심 종목 · 검색 결과 목록 + 관심 목록</figcaption>
+</figure>
+
+<p>왼쪽 검색 결과에서 + 추가를 누르면 오른쪽 관심 종목에 쌓이고, 두 목록의 행을 누르면 그 종목을 고른 채 <a href="../screens/chart.html">종목 차트</a>를 연다. NXT 칸은 대상(배지)·아님·값 없음(—)을 나누어 보이고, 종목 마스터 출처는 아직 미확인이다.</p>
+
+<h2>쓰는 공통 UI</h2>
+<p><a href="../components/shell.html">화면 틀</a> · <a href="../components/auto-order-bar.html">자동 주문 표시줄</a> (변형 7, M2부터 연결 상태 칸)</p>
+
+<h2>상태</h2>
+<table>
+<thead><tr><th>상태</th><th>보일 것</th></tr></thead>
+<tbody>
+<tr><td>검색어 입력 전</td><td>결과 자리에 입력 안내. 관심 종목은 그대로</td></tr>
+<tr><td>결과 0건</td><td>"찾는 종목이 없다" 한 줄. 고른 시장 칩은 유지</td></tr>
+<tr><td>종목 마스터 미수신·갱신 실패</td><td>검색 카드 위 경고 띠. 마스터 기준일은 마지막 성공일</td></tr>
+<tr><td>관심 종목 가득 참</td><td>+ 추가 비활성, 최대 개수에 닿았다는 안내(숫자 미정)</td></tr>
+<tr><td>현재가 받기 전</td><td>현재가 칸 "—", 받은 시각 자리에 "받기 전"</td></tr>
+<tr><td>실시간 끊김</td><td>현재가를 흐리게, 마지막 받은 시각 유지. 표시줄 연결 칸 "재연결 중"</td></tr>
+<tr><td>장 시작 전·마감 뒤</td><td>현재가 칸에 "종가"와 기준일</td></tr>
+<tr><td>거래정지·상장폐지된 관심 종목</td><td>행에 상태 배지(표시명 미정). 삭제는 가능</td></tr>
+<tr><td>NXT 값 없음</td><td>NXT 칸 "—". 대상이 아니면 "아님"</td></tr>
+</tbody>
+</table>
+
+<h2>화면 규칙</h2>
+<ul>
+<li>보여 줄 것: 종목 코드, 이름, 시장(KOSPI/KOSDAQ), NXT 대상 여부, 관심 종목(종목, 현재가, 등락, 삭제), 마스터 기준일, 값마다 받은 시각</li>
+<li>미확인: 종목 마스터 출처(KRX Open API 또는 증권사 종목 파일)</li>
+<li>주의: NXT 대상은 바뀐다. 모의에서는 NXT 주문이 안 되므로 배지는 시세 구분용으로만 쓴다</li>
+<li>관심 종목 최대 개수는 WebSocket 구독 한도(예제 클라이언트 40개, 차트·체결통보와 공유)에 묶인다. 숫자와 "보이는 행만 구독" 여부는 미정</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+/* 설계 문서 전용 스타일. 제품 토큰이 아니다(토큰 원본은 frontend/ 코드). */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  color: #1f1f1f;
+  background: #fafaf8;
+  line-height: 1.6;
+  display: flex;
+  min-height: 100vh;
+}
+nav#side {
+  width: 232px;
+  flex: none;
+  border-right: 1px solid #e4e2dc;
+  background: #f3f2ee;
+  padding: 20px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  font-size: 14px;
+}
+nav#side .doc-title { font-weight: 600; font-size: 15px; margin: 0 8px 16px; }
+nav#side .group { margin: 14px 8px 4px; font-size: 12px; color: #6b6b6b; font-weight: 600; }
+nav#side a {
+  display: block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #1f1f1f;
+  text-decoration: none;
+}
+nav#side a:hover { background: #e9e7e1; }
+nav#side a.current { background: #dde7f7; color: #1a4f9c; font-weight: 600; }
+main { flex: 1; min-width: 0; padding: 32px 40px 80px; max-width: 980px; }
+h1 { font-size: 24px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 36px 0 8px; }
+h3 { font-size: 15px; margin: 24px 0 6px; }
+.meta { color: #6b6b6b; font-size: 13px; margin-bottom: 20px; }
+.lead { font-size: 15px; }
+figure { margin: 20px 0; overflow-x: auto; }
+figure img { display: block; width: 100%; min-width: 720px; height: auto; border: 1px solid #e4e2dc; border-radius: 8px; background: #fff; }
+figcaption { color: #6b6b6b; font-size: 13px; margin-top: 6px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 16px; }
+th, td { border: 1px solid #e4e2dc; padding: 6px 10px; text-align: left; vertical-align: top; }
+th { background: #f3f2ee; font-weight: 600; }
+code { background: #efeee9; padding: 1px 4px; border-radius: 4px; font-size: 13px; }
+.tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; border: 1px solid #c9c6bd; color: #6b6b6b; }
+.tag.draft { border-color: #f2a516; color: #8a5c00; background: #fff6e0; }
+.note { color: #6b6b6b; font-size: 13px; }
+ul.todo { list-style: none; padding-left: 0; }
+ul.todo li::before { content: "☐ "; }
+ul.todo li.done::before { content: "☑ "; }
+@media (max-width: 900px) {
+  body { display: block; }
+  nav#side { width: auto; height: auto; position: static; border-right: none; border-bottom: 1px solid #e4e2dc; }
+  main { padding: 20px; }
+}

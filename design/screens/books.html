@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>장부 비교·평가 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="books">
+<nav id="side"></nav>
+<main>
+<h1>장부 비교·평가</h1>
+<div class="meta">M5 · 메뉴: 성과 · <span class="tag">확정</span> · 진입: 성과 메뉴, <a href="../screens/backtest.html">백테스트 결과</a>, <a href="../screens/strategies.html">전략 목록·설정</a>(근거 "장부 비교 ▸") · 다음: <a href="../screens/go-live.html">실전 전환</a>(M7부터), <a href="../screens/report.html">아침 리포트·판단 기록</a>(매도 사후 평가 행)</div>
+
+<p class="lead">장부 4개의 비용 차감 후 수익률·MDD, jev 보정, 매도 사후 평가를 본다(strategy.md 16장, Recharts).</p>
+
+<figure>
+<img src="../svg/books.svg" alt="장부 비교·평가 화면 와이어프레임: 기간·성과 구간, 실전 전환 기준 판정, 장부 4개 요약, 자산 곡선, jev 보정, 매도 사후 평가">
+<figcaption>장부 비교·평가 · 기간·성과 구간, 장부 4개 요약, 자산 곡선, jev 보정, 매도 사후 평가</figcaption>
+</figure>
+
+<p>위에서 성과 구간과 그 안의 기간을 고르면 판정 줄, 장부 4개의 요약 표와 자산 곡선이 같은 기준으로 바뀌고, 아래에서 jev 판단의 보정과 매도 결과를 따로 본다.</p>
+
+<p>운영 장부는 실제 체결, 가상 장부는 보수적 체결 규칙이라 그대로 비교하면 운영에 유리하다. 그래서 운영 체결을 같은 규칙으로 다시 계산한 "운영(보수적 재계산)" 행을 요약 표에 두고, 16.3 판정과 세 효과(교체, jev 매도, jev 매수)는 이 행으로 계산한다. 요약 표는 장부마다 비용 출처(운영: KIS 조회 추정치 <code>prsm_tlex_smtl</code> / 가상 장부·재계산: 설정 요율 0.0142%·0.20%, 2차 자료라 검증하지 않음)를 보이고, 샤프 비율·회전율·총 거래 비용(16.2)을 함께 둔다. 자산 곡선은 구간 시작 대비 수익률(%)로 맞추고, 기간이 성과 구간 경계를 넘으면 구간 안으로 자른다(제안).</p>
+
+<h2>쓰는 공통 UI</h2>
+<p><a href="../components/shell.html">화면 틀</a> · <a href="../components/auto-order-bar.html">자동 주문 표시줄</a> (변형 1 켜짐)</p>
+
+<h2>상태</h2>
+<table>
+<thead><tr><th>상태</th><th>보일 것</th></tr></thead>
+<tbody>
+<tr><td>15:40 일일 평가 전</td><td>오늘 값은 아직 없다. 표·판정 줄·곡선은 어제 평가까지 보이고, 표 위에 "오늘 평가는 15:40 뒤"를 적는다</td></tr>
+<tr><td>성과 구간 리셋</td><td>리셋 날 새 구간이 열리고 이전 구간은 구간 고르기로 따로 본다. 곡선은 리셋을 넘어 잇지 않는다. 새 구간이 3개월 미만이면 판정 줄은 "기간 부족"</td></tr>
+<tr><td>빈 기간</td><td>고른 기간에 평가 기록이 없으면 표 값은 "—", 곡선 자리에 "이 기간에 평가 기록이 없다"를 적는다</td></tr>
+<tr><td>jev 보정 표본 부족</td><td>구간마다 n을 적고, 기준에 못 미친 점은 빈 원(점선)으로 그린다. 기준 n은 미정</td></tr>
+</tbody>
+</table>
+
+<h2>화면 규칙</h2>
+<ul>
+<li>데이터: <code>paper_books</code>(NO_ROTATION/JEV_BUY_ONLY/RULE), 실제 계좌, <code>account_epochs</code></li>
+<li>주의: 비용의 수수료·세금은 추정치다. 리셋으로 성과 구간이 끊기면 곡선을 잇지 않는다. 모의 성과는 실전보다 좋게 나온다</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

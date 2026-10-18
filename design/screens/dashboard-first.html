@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>대시보드 (첫 판) · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="dashboard-first">
+<nav id="side"></nav>
+<main>
+<h1>대시보드 (첫 판)</h1>
+<div class="meta">M1 · 메뉴: 홈 · <span class="tag">확정</span> · 진입: 로그인, 계좌 연결(첫 등록 뒤) · 다음: 계좌 연결(계좌가 없거나 토큰 실패)</div>
+
+<p class="lead">KIS 잔고 조회(<code>VTTC8434R</code>)를 그대로 보여 준다.</p>
+
+<figure>
+<img src="../svg/dashboard-first.svg" alt="대시보드 첫 판 와이어프레임: 예수금·주문 가능 현금·평가 손익(미확인) 요약 카드 3개, 보유 종목 표, 새로고침 버튼">
+<figcaption>대시보드 (첫 판) · 요약 카드 3개 + 보유 종목 표 + 새로고침</figcaption>
+</figure>
+
+<p>위에 예수금·주문 가능 현금·평가 손익(미확인) 카드, 아래에 보유 종목 표가 오고, 값은 모두 마지막 조회 시각 기준이고 자동 새로고침은 호출 한도 때문에 느리게 둔다.</p>
+
+<p>자동 새로고침은 장중 30초(가정값), 장 밖에서는 수동이다(결정 2026-10-16). 조회 중에는 새로고침 버튼을 끈다. 예수금 카드는 매매가 바로 반영되는 <code>prvs_rcdl_excc_amt</code>를 보이고, <code>dnca_tot_amt</code>는 결제 전 기준이라고 적는다(B-02 9g).</p>
+
+<h2>쓰는 공통 UI</h2>
+<p><a href="../components/shell.html">화면 틀</a> · <a href="../components/auto-order-bar.html">자동 주문 표시줄</a> (변형 7, "시세: 조회만")</p>
+
+<h2>상태</h2>
+<table>
+<thead><tr><th>상태</th><th>보일 것</th></tr></thead>
+<tbody>
+<tr><td>불러오는 중</td><td>카드·표 자리에 빈 틀, 새로고침 버튼 비활성</td></tr>
+<tr><td>조회 실패: 초당 한도</td><td><code>EGW00201</code>. 직전 값을 두고 "오래된 값"으로 표시, 다음 주기에 다시 조회</td></tr>
+<tr><td>조회 실패: 토큰 발급 실패</td><td>안내 문구 + "<a href="../screens/account.html">계좌 연결</a> ▸" 버튼</td></tr>
+<tr><td>오래된 값</td><td>실패 뒤 직전 값을 보일 때 "마지막 조회 시각 · 오래된 값"</td></tr>
+<tr><td>계좌 없음</td><td>카드·표 대신 "등록된 계좌가 없습니다" + "<a href="../screens/account.html">계좌 연결</a> ▸" 버튼</td></tr>
+<tr><td>보유 종목 없음</td><td>빈 표에 "보유 종목이 없습니다"</td></tr>
+<tr><td>장 밖</td><td>자동 새로고침 멈춤, "장 밖 · 수동 새로고침". 값은 마지막 조회 기준</td></tr>
+<tr><td>평가 손익 필드 없음</td><td>(현재가 − 평균 매입가) × 보유 수량을 계산해 "계산" 표시(제안)</td></tr>
+</tbody>
+</table>
+
+<h2>화면 규칙</h2>
+<ul>
+<li>보여 줄 것: 예수금 <code>prvs_rcdl_excc_amt</code>, 주문 가능 현금 <code>ord_psbl_cash</code>, 보유 종목 표(<code>pdno</code>, <code>prdt_name</code>, <code>hldg_qty</code>, <code>ord_psbl_qty</code>, <code>pchs_avg_pric</code>, <code>prpr</code>)</li>
+<li>미확인: 평가 손익 필드 이름</li>
+<li>주의: <code>ord_psbl_cash</code>는 <code>prvs_rcdl_excc_amt</code>의 약 99.5%이고 이유는 모른다. 모의 호출 한도가 초당 2건이라 자동 새로고침은 장중 30초(가정값), 장 밖은 수동이다. dnca_tot_amt는 결제 전 기준이라 카드에 쓰지 않는다</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>
