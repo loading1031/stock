@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>포지션 계획 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="position-plan">
+<nav id="side"></nav>
+<main>
+<h1>포지션 계획</h1>
+<div class="meta">M5 · 메뉴: 매매 · <span class="tag">확정</span> · 진입: 매매 메뉴 · 다음: <a href="../screens/report.html">아침 리포트·판단 기록</a>(매수 판단 기록), <a href="../screens/order.html">주문</a>(회차 "주문 ▸")</div>
+
+<p class="lead">분할매수 회차, 목표 주가, 무효화 가격을 차트와 함께 보여 준다(Lightweight Charts).</p>
+
+<figure>
+<img src="../svg/position-plan.svg" alt="포지션 계획 화면 와이어프레임: 계획 목록, 목표 주가·평균 단가·무효화 가격선 차트, 분할매수 회차 표, 매도 기록">
+<figcaption>포지션 계획 · 계획 목록, 가격선 차트, 회차 표, 매도 기록</figcaption>
+</figure>
+
+<p>왼쪽에서 계획을 고르면 오른쪽에 그 계획의 목표 주가·평균 단가·무효화 가격선과 회차, 매도 기록이 나오고, 자동 주문이 꺼진 동안 나가지 못한 회차는 "보류"로 보인다. 그래서 이 예시는 표시줄을 변형 2(꺼짐 · 사람이 끔)로 두고, 꺼진 동안 무효화 가격 손절(강제 청산)도 멈춘다는 경고를 무효화 가격선 아래에 보인다.</p>
+
+<p>계획 상태는 <a href="../components/status-names.html">상태 표시명</a>(계획됨·매수 중·보유·매도 중·끝남·취소)을, 회차 상태는 결정(2026-10-16)대로 대기 → 주문 나감 → 체결, 그 밖에 보류·취소를 쓴다. 머리 값은 strategy.md 9.1 예시값(3회 × 100만 원, 진입가 − 2 ATR, 5거래일)이고, 회차 표의 체결 칸이 계획값과 체결값을 나눈다. 차트의 회차 표시는 체결가 자리에 찍고, 평균 단가는 원장 값이다(제안). "주문 ▸"은 <a href="../screens/order.html">주문</a> 화면의 체인 행을 펼쳐 연다(제안).</p>
+
+<h2>쓰는 공통 UI</h2>
+<p><a href="../components/shell.html">화면 틀</a> · <a href="../components/auto-order-bar.html">자동 주문 표시줄</a> (변형 2, 켜진 때 변형 1) · <a href="../components/status-names.html">상태 표시명</a> (포지션 계획)</p>
+
+<h2>상태</h2>
+<table>
+<thead><tr><th>상태</th><th>보일 것</th></tr></thead>
+<tbody>
+<tr><td>계획 없음</td><td>목록에 "포지션 계획이 없다" 한 줄, 오른쪽은 비움</td></tr>
+<tr><td>불러오는 중</td><td>목록·차트 자리에 뼈대</td></tr>
+<tr><td>조회 오류</td><td>마지막 값을 두고 오류 한 줄 + 다시 시도</td></tr>
+<tr><td>회차 주문 나감</td><td>회차 "주문 나감" + 주문의 상태 표시명(미체결·부분 체결)</td></tr>
+<tr><td>회차 주문 거부·확인 중</td><td>회차 옆에 주문 상태 표시명(거부·확인 중)과 이유</td></tr>
+<tr><td>다음 거래일로 이월</td><td>장 마감 때 미체결 회차에 "이월" 표시(strategy.md 15장)</td></tr>
+<tr><td>근거 재확인 미달</td><td>회차에 "근거 재확인 &lt; 0.5" 이유(9.2). 회차를 어떻게 둘지는 정할 것</td></tr>
+<tr><td>만료</td><td>남은 회차 "취소" + 만료일. 계획이 보유로 가는지는 9.3 글을 따름</td></tr>
+<tr><td>매도 중 (EXITING)</td><td>머리 배지 "매도 중", 매도 기록에 진행 중 주문</td></tr>
+<tr><td>취소 (CANCELLED)</td><td>머리 배지 "취소" + 사유(무효화 가격 도달·만료·근거 소멸)</td></tr>
+<tr><td>자동 주문 꺼짐</td><td>표시줄 변형 2, 회차 "보류", 무효화 가격선 아래 "손절 멈춤" 경고</td></tr>
+<tr><td>실시간 끊김</td><td>표시줄 변형 5, 무효화까지 거리 옆에 받은 시각</td></tr>
+</tbody>
+</table>
+
+<h2>화면 규칙</h2>
+<ul>
+<li>데이터: <code>position_plans</code>(mode, target_amount, invalidation_price, target_price, status, expires_on), <code>plan_tranches</code>, <code>exits</code></li>
+<li>주의: 자동 주문이 꺼져도 계획 상태는 그대로이고 회차와 강제 청산(무효화 가격 손절) 주문이 나가지 않는다. 회차 주문이 정정되면 번호가 바뀐다</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>

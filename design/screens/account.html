@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계좌 연결 · stock 화면 설계</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root=".." data-page="account">
+<nav id="side"></nav>
+<main>
+<h1>계좌 연결</h1>
+<div class="meta">M1 · 메뉴: 관리 · <span class="tag">확정</span> · 진입: 로그인(계좌가 없을 때), 대시보드 "계좌 연결 ▸" · 다음: 대시보드</div>
+
+<p class="lead">계좌 종류마다 레코드 하나를 등록한다. 앱키가 계좌마다 따로이기 때문이다(B-02 확정).</p>
+
+<figure>
+<img src="../svg/account.svg" alt="계좌 연결 화면 와이어프레임: 알림 자리, 등록된 계좌 목록(키·계좌번호 가림, 토큰 상태), 계좌 추가 폼">
+<figcaption>계좌 연결 · 알림 자리, 등록된 계좌 목록, 계좌 추가 폼</figcaption>
+</figure>
+
+<p>계좌 종류마다 한 줄씩 등록하고, 환경은 등록 뒤 바꿀 수 없으며 키·계좌번호는 가려서 보인다.</p>
+
+<p>계좌 등록 버튼은 <a href="../components/confirm-dialog.html">확인 대화상자</a>를 거친다(요약: 환경·종류·계좌번호 끝 2자리, 등록 뒤 환경을 못 바꾼다는 안내). 환경 "실전"은 M7 전까지 비활성이다(결정 2026-10-16). 목록은 상태 열 없이 토큰 상태(유효·만료·실패)를 보인다(결정 2026-10-16). 행마다 키 교체·만료일 수정·사용 중지를 둔다(제안).</p>
+
+<h2>쓰는 공통 UI</h2>
+<p><a href="../components/shell.html">화면 틀</a> · <a href="../components/auto-order-bar.html">자동 주문 표시줄</a> (변형 7, "시세: 조회만") · <a href="../components/confirm-dialog.html">확인 대화상자</a> (계좌 등록)</p>
+
+<h2>상태</h2>
+<table>
+<thead><tr><th>상태</th><th>보일 것</th></tr></thead>
+<tbody>
+<tr><td>계좌 없음(첫 사용)</td><td>목록 자리에 "등록된 계좌가 없습니다" 안내, 계좌 추가 폼을 펼쳐 둔다. 대시보드 링크는 첫 등록 뒤에 보인다</td></tr>
+<tr><td>등록 중</td><td>확인 대화상자에서 확인한 뒤 버튼 비활성 + "등록 중". 토큰 발급·잔고 조회로 키를 확인한다</td></tr>
+<tr><td>토큰 유효</td><td>초록 점 + "유효 · 만료 시각까지"</td></tr>
+<tr><td>토큰 만료</td><td>경고 점 + "만료" (24시간 유효)</td></tr>
+<tr><td>실패: 키 틀림</td><td>빨강 점 + "키 틀림", 알림 자리에 같은 줄</td></tr>
+<tr><td>실패: 계좌·앱키 불일치</td><td>빨강 점 + "계좌·앱키 불일치" (<code>INVALID_CHECK_ACNO</code>, B-02 실측)</td></tr>
+<tr><td>발급 제한 대기</td><td>발급은 1분당 1회(<code>EGW00133</code>). "1분 뒤 다시 발급" 안내</td></tr>
+<tr><td>만료 2주 전</td><td>알림 자리에 경고 줄 + 해당 행 링크. 모의 계좌 만료 기간은 미확인</td></tr>
+<tr><td>실전 선택</td><td>M7 전까지 비활성, "M7 전 비활성" 문구</td></tr>
+</tbody>
+</table>
+
+<h2>화면 규칙</h2>
+<ul>
+<li>보여 줄 것: 증권사, 환경(모의/실전), 계좌 종류(주식/선물옵션), 계좌번호 8자리 + 상품코드 2자리, App Key, App Secret, HTS 아이디(체결통보 구독 키), 만료일(모의)</li>
+<li>데이터: <code>broker_accounts</code>. 토큰은 24시간 유효, 발급은 1분당 1회</li>
+<li>주의: 환경은 레코드에서 바꿀 수 없다. 키·계좌번호는 가려서 보인다. 토큰 발급 실패와 만료 2주 전을 알린다</li>
+</ul>
+</main>
+<script src="../assets/nav.js"></script>
+</body>
+</html>
