@@ -1,0 +1,85 @@
+name: Review gate
+
+on:
+  pull_request_target:
+    branches: [dev, main]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  issue_comment:
+    types: [created, edited, deleted]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  push:
+    branches: [dev]
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      pull_request:
+        description: PR number to refresh
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+  statuses: write
+
+concurrency:
+  group: review-gate-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    # Issue events also fire for ordinary issues. Only PR comments are relevant.
+    if: github.event_name != 'issue_comment' || github.event.issue.pull_request
+    name: Refresh review gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Invalidate the previous result before checkout or module loading can fail.
+      - uses: actions/github-script@v7
+        id: targets
+        with:
+          script: |
+            const p = context.payload;
+            let numbers;
+            if (['push', 'schedule'].includes(context.eventName)) {
+              const pulls = await github.paginate(github.rest.pulls.list, {
+                ...context.repo, state: 'open', per_page: 100
+              });
+              numbers = pulls.filter(pr => ['dev', 'main'].includes(pr.base.ref)).map(pr => pr.number);
+            } else {
+              const number = p.pull_request?.number || p.issue?.number || Number(p.inputs?.pull_request);
+              if (!Number.isSafeInteger(number) || number <= 0) throw new Error('Invalid PR number');
+              numbers = [number];
+            }
+            const active = [];
+            const seenHeads = new Set();
+            for (const number of numbers) {
+              const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: number });
+              if (pr.state !== 'open' || !['dev', 'main'].includes(pr.base.ref) || seenHeads.has(pr.head.sha)) continue;
+              seenHeads.add(pr.head.sha);
+              await github.rest.repos.createCommitStatus({
+                ...context.repo, sha: pr.head.sha, context: 'review-complete', state: 'pending',
+                description: 'Checking latest Codex review state',
+                target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${number}`
+              });
+              active.push(number);
+            }
+            return active;
+      # Never check out or execute PR head code with the writable status token.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/github-script@v7
+        env:
+          PR_NUMBERS: ${{ steps.targets.outputs.result }}
+        with:
+          script: |
+            const { refreshPull } = require('./scripts/review-gate.cjs');
+            for (const number of JSON.parse(process.env.PR_NUMBERS)) {
+              const result = await refreshPull(github, context.repo, number);
+              if (result) core.info(`#${number}: ${result.state}: ${result.description}`);
+            }
