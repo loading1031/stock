@@ -31,6 +31,7 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 - 금지어: 단계, 킬 스위치
 - 기본 브랜치: main
 - 개발 브랜치: dev (코드 브랜치는 dev에서 분기하고 dev로 PR. 기획은 main)
+- 보호 브랜치: main, dev (GitHub 보호 규칙. 바로 커밋하지 않고 PR로만 합친다. "Git" 절)
 - 기획 브랜치: plan/<ID>-<slug> (예: plan/B-03-frontend)
 - 합치기 방식: PR (머지 커밋, PR 본문의 `Closes #<이슈>`로 이슈를 닫음)
 - 작업지시서: issue (GitHub 이슈, 라벨 `plan`. 진행 메모는 댓글)
@@ -73,6 +74,7 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 | 판단 모델 | Ollama 결정 모델 jev(`nimble`). 판단만, 숫자는 코드, 한도는 규칙 |
 | 테스트 | JUnit 6, 뮤테이션 테스트 PIT(`domain`·`application/service`, 변경분은 `git diff`로 대상 지정, 기준선 없음), ArchUnit |
 | 코드 작업 단위 | GitHub 이슈 하나 = PR 하나 = 기능 세로 조각(Spring·Next·화면 함께). GitHub Milestone `M0`~`M7`로 묶고 계층 라벨은 쓰지 않음. M0·M1 이슈는 [#16](https://github.com/loading1031/stock/issues/16)의 하위 이슈 |
+| 합치기 | main·dev는 보호 브랜치. 모든 변경은 PR로, Codex 리뷰 게이트(`review-complete`)와 리뷰 대화 해결을 통과해야 머지. 자동 머지는 쓰지 않고 `/planning:done`을 다시 실행해 머지 |
 | 로컬 실행 | Docker Compose는 TimescaleDB만(`2.26.1-pg18`, `127.0.0.1`), Ollama는 Mac에서 직접. Flyway 계정과 앱 계정 분리 |
 
 ## 디자인
@@ -113,4 +115,6 @@ M0에서 `/kopring:init hexagonal`로 컨벤션 선언과 pre-commit 훅을 설�
 
 - 원격: GitHub [loading1031/stock](https://github.com/loading1031/stock)(public). `.env`와 키·계좌번호는 절대 올리지 않는다.
 - 커밋·브랜치·PR 규칙은 planning 스킬(`/planning:commit`, `/planning:done`)을 따른다.
+- **main·dev 보호 규칙:** 필수 체크 `review-complete`, 리뷰 대화 해결 필수, 관리자에게도 적용, PR 필수(승인 0명), 강제 push·삭제 금지. 그래서 main·dev에는 바로 커밋할 수 없다. 작은 설정·문서 수정도 `chore/<slug>`·`docs/<slug>` 브랜치와 PR(라벨 `chore`)로 합친다. M0(#17)에서 필수 체크에 `test`를 더한다.
+- **리뷰 게이트:** `.github/workflows/review-gate.yml` + `scripts/review-gate.ts`. PR의 최신 커밋에 대한 Codex 리뷰가 끝나야 `review-complete`가 성공한다. `/planning:done`은 실행할 때마다 머지를 시도하고, 리뷰 대기·미해결 대화로 막히면 이유를 보여 주고 멈춘다. 지적을 고치거나 리뷰가 끝난 뒤 다시 실행한다.
 - 문서는 한국어로 쓴다.
