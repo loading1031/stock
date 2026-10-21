@@ -10,7 +10,6 @@
 | 순서 | ID | 이슈 | 사용자 준비물 |
 |---|---|---|---|
 | 1 | B-02 KIS API 검증 | [#6](https://github.com/loading1031/stock/issues/6) | **KIS 모의투자 신청 + KIS Developers 모의 앱키 발급** |
-| 3 | B-24 프론트·백엔드 작업 나누기 | 이슈 칸 `—`(pick 때 생성) | 없음 |
 | 아무 때나 | B-14 kopring 원본 정리 (claude-plugins 저장소에서) | [#7](https://github.com/loading1031/stock/issues/7) | A/B 선택 |
 | 아무 때나 | B-21 시각화 문서 동기화 | [#8](https://github.com/loading1031/stock/issues/8) | 없음 |
 
@@ -38,7 +37,6 @@ B-02는 준비물이 있어야 의미가 있다. 모의투자 신청은 미리 �
 | B-20 | 해외주식 모의 거래 범위 | 한국투자증권 모의투자 안내(통합증거금)에 따르면 모의에서도 국내·해외를 한 계좌로 거래할 수 있다. 지금은 해외를 분석 전용으로 둔다(plan.md 3.11). 거래로 넓힐지, 통합증거금·환율(B-15)·세션(미국장 야간)·리스크 한도를 어떻게 다룰지 | B-02, B-15 | P2 | — |
 | B-21 | 시각화 문서 동기화 | "동기화 빚"이 쌓여 시각화 문서가 문서보다 뒤처짐. 다이어그램마다 렌더링 확인 | — | P1 | [#8](https://github.com/loading1031/stock/issues/8) |
 | B-22 | 운영 시 Compose 구성 | 오래 돌릴 때 Spring·Next를 Compose로 묶고 Spring 포트를 열지 않는다("Compose는 TimescaleDB만" 결정 변경). 내부·외부 네트워크 분리, Ollama 연결, 이미지 빌드, 로그 | B-03 | P1 | — |
-| B-24 | 프론트·백엔드 작업 나누기 | plan.md 7장 마일스톤과 B-23 화면을 기준으로 M0·M1 코드 작업을 GitHub 이슈로 나눔(백엔드·프론트·API 스펙 단위, `<종류>/<이슈>-<slug>` 브랜치). m0-foundation.md의 PIT 비교 기준 `main...HEAD`도 `dev...HEAD`로 고침 | B-23 | P0 | — |
 
 ## 진행 중
 
@@ -54,6 +52,7 @@ B-02는 준비물이 있어야 의미가 있다. 모의투자 신청은 미리 �
 | B-03 | 프론트엔드 기술과 화면 목록 | [frontend.md](frontend.md), plan.md 2장·3.1·3.7·3.10·5장·7장, strategy.md 9.3·11.2, 용어 "자동 주문 끄기·미체결 주문 취소", 이슈 [#5](https://github.com/loading1031/stock/issues/5) | 2026-10-14 |
 | B-18 | 기획 관리를 GitHub 이슈로 | 작업지시서 = 이슈(라벨 `plan`), planning 0.5.0, CLAUDE.md "기획 진행 방식"·"Git", 이슈 [#4](https://github.com/loading1031/stock/issues/4) | 2026-10-14 |
 | B-23 | 화면 디자인 문서 | [design/index.html](../../design/index.html)(정보 구조, 화면 18개, 공통 UI), frontend.md "화면 설계", plan.md 3.6~3.9·5장, strategy.md 9.3·15·16.3·17, CLAUDE.md "디자인", 이슈 [#13](https://github.com/loading1031/stock/issues/13) | 2026-10-18 |
+| B-24 | 프론트·백엔드 작업 나누기 | M0·M1 코드 이슈 #17~#23(#16의 하위 이슈, Milestone M0·M1), plan.md 3.1·7장, m0-foundation.md PIT 기준 `dev...HEAD`, CLAUDE.md "결정된 사항", 이슈 [#16](https://github.com/loading1031/stock/issues/16) | 2026-10-19 |
 
 ## 동기화 빚
 

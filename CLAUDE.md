@@ -72,12 +72,13 @@ planning 플러그인이 읽는 설정값. **진행 절차(명령 순서, 커밋
 | 증권사·데이터 | KIS Open API (주문, 국내·해외 시세, 선물). 과거 일봉 백필은 KRX Open API |
 | 판단 모델 | Ollama 결정 모델 jev(`nimble`). 판단만, 숫자는 코드, 한도는 규칙 |
 | 테스트 | JUnit 6, 뮤테이션 테스트 PIT(`domain`·`application/service`, 변경분은 `git diff`로 대상 지정, 기준선 없음), ArchUnit |
+| 코드 작업 단위 | GitHub 이슈 하나 = PR 하나 = 기능 세로 조각(Spring·Next·화면 함께). GitHub Milestone `M0`~`M7`로 묶고 계층 라벨은 쓰지 않음. M0·M1 이슈는 [#16](https://github.com/loading1031/stock/issues/16)의 하위 이슈 |
 | 로컬 실행 | Docker Compose는 TimescaleDB만(`2.26.1-pg18`, `127.0.0.1`), Ollama는 Mac에서 직접. Flyway 계정과 앱 계정 분리 |
 
 ## 디자인
 - design 플러그인을 따른다 (화면 작업 전 승인 기준의 화면·공통 UI를 읽고, 구현 커밋에 반영한 문서와 기준을 적는다)
 - 문서: design/index.html
-- 기준: 커밋 65bebcc (design/ 전체, 2026-10-18 사용자 확정. B-23 PR이 합쳐지면 머지 커밋으로 갱신)
+- 기준: 커밋 1519023 (B-23 머지 커밋, design/ 전체, 2026-10-18 사용자 확정)
 - 토큰 원본: 미정 (M1에서 `frontend/`의 `globals.css` 테마)
 - 컴포넌트 원본: 미정 (M1에서 `frontend/` UI 컴포넌트)
 - 카탈로그: 미정 (Storybook, M1에서 `frontend/`에 설정)
