@@ -42,7 +42,6 @@ B-02는 준비물이 있어야 의미가 있다. 모의투자 신청은 미리 �
 
 | ID | 주제 | 브랜치 | 이슈 | 시작 |
 |---|---|---|---|---|
-| B-26 | PR 리뷰 게이트를 기획 절차에 반영 | plan/B-26-review-gate | [#25](https://github.com/loading1031/stock/issues/25) | 2026-10-22 |
 
 ## 완료
 
@@ -54,6 +53,7 @@ B-02는 준비물이 있어야 의미가 있다. 모의투자 신청은 미리 �
 | B-18 | 기획 관리를 GitHub 이슈로 | 작업지시서 = 이슈(라벨 `plan`), planning 0.5.0, CLAUDE.md "기획 진행 방식"·"Git", 이슈 [#4](https://github.com/loading1031/stock/issues/4) | 2026-10-14 |
 | B-23 | 화면 디자인 문서 | [design/index.html](../../design/index.html)(정보 구조, 화면 18개, 공통 UI), frontend.md "화면 설계", plan.md 3.6~3.9·5장, strategy.md 9.3·15·16.3·17, CLAUDE.md "디자인", 이슈 [#13](https://github.com/loading1031/stock/issues/13) | 2026-10-18 |
 | B-24 | 프론트·백엔드 작업 나누기 | M0·M1 코드 이슈 #17~#23(#16의 하위 이슈, Milestone M0·M1), plan.md 3.1·7장, m0-foundation.md PIT 기준 `dev...HEAD`, CLAUDE.md "결정된 사항", 이슈 [#16](https://github.com/loading1031/stock/issues/16) | 2026-10-19 |
+| B-26 | PR 리뷰 게이트를 기획 절차에 반영 | CLAUDE.md "기획 설정"(보호 브랜치)·"결정된 사항"(합치기)·"Git", m0-foundation.md "M0 구현 체크리스트"(CI `test`), planning 플러그인 보호 브랜치 대응([claude-plugins#15](https://github.com/loading1031/claude-plugins/pull/15)) | 2026-10-30 |
 
 ## 동기화 빚
 
