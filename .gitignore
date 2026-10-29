@@ -16,3 +16,6 @@ out/
 .env.*
 !.env.example
 .claude/settings.local.json
+
+# KIS 호출 실험 기록 (토큰·계좌 정보가 들어 있을 수 있음)
+scripts/kis-probe/

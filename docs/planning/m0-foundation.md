@@ -155,6 +155,7 @@ M0 구현 세션은 이슈 [#17](https://github.com/loading1031/stock/issues/17)
 | `src/test/…/TestcontainersConfig.kt`, `ApplicationContextTest.kt` | 컨텍스트 로딩 테스트. 테스트 컨테이너에도 두 계정을 만든다(같은 초기화 스크립트) |
 | `src/test/…/ArchitectureTest.kt`, `src/test/resources/archunit.properties` | ArchUnit 규칙, `archRule.failOnEmptyShould=false` |
 | `/kopring:init hexagonal`이 만드는 것 | CLAUDE.md 컨벤션 선언, `.githooks/pre-commit`. 실행 뒤 `git config core.hooksPath .githooks` |
+| `.github/workflows/test.yml` | PR에서 `./gradlew test`를 돌리는 CI. 체크 이름 `test`. 머지 뒤 main·dev 보호 규칙의 필수 체크에 `test`를 더한다(지금은 `review-complete`만, B-26) |
 
 **실행할 명령과 확인 방법**
 
@@ -166,6 +167,7 @@ M0 구현 세션은 이슈 [#17](https://github.com/loading1031/stock/issues/17)
 | `./gradlew bootRun` | Compose로 DB가 자동으로 뜨고 앱이 시작됨. `127.0.0.1`에서만 접속됨 |
 | `.kt` 파일에 `Instant.now()`를 쓰려고 함 | kopring 훅이 `time/inject-clock`으로 막음 |
 | `git commit` | pre-commit 훅이 `.kt` 파일을 검사 |
+| `gh api repos/loading1031/stock/branches/main/protection` (dev도) | 필수 체크에 `review-complete`와 `test`가 있음 |
 
 **구현 전에 확인할 것**
 - KRX 호가 단위 구간(2023년 개편안으로 알고 있음, **검증하지 않음**). KRX 공식 출처로 확인한 뒤 TickSize를 쓴다
